@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>Saddle Watts Configurator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,700;1,800&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: race-day fit studio — asphalt neutrals, one leader's jersey colour at a time (Jaune / Rosa / Rojo) as the fill accent, race-bib numerals for the key result */
+:root{
+  /* fixed jersey swatches, same in both themes */
+  --y:#FFD200; --p:#F28CB8; --r:#D6121C;
+  /* asphalt neutrals */
+  --bg:#F1F2F0; --panel:#FFFFFF; --ink:#15171B; --muted:#5C6068; --line:#D9DBDD; --soft:#E7E8E6;
+  /* active jersey (default: Jaune) — --jersey is a fill, --accent is text-safe */
+  --jersey:#FFD200; --on-jersey:#15171B; --accent:#876300; --accent-soft:#FFF3BF; --accent-ink:var(--on-jersey);
+  --good:#1E7F4F; --warn:#9A6412; --risk:#B3261E; --pre:#6B4FB8;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+:root[data-tour="rosa"]{--jersey:#F28CB8; --on-jersey:#2A0B19; --accent:#B0215F; --accent-soft:#FCE4EF}
+:root[data-tour="rojo"]{--jersey:#D6121C; --on-jersey:#FFFFFF; --accent:#C0121B; --accent-soft:#FBE2E3}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111215; --panel:#1A1C20; --ink:#ECEDEF; --muted:#9A9EA6; --line:#2C2F35; --soft:#22252A;
+    --accent:#FFD43B; --accent-soft:#3A3212;
+    --good:#5FC892; --warn:#E3B062; --risk:#F08A80; --pre:#B9A2F2; color-scheme:dark}
+  :root:not([data-theme="light"])[data-tour="rosa"]{--accent:#F7A3C8; --accent-soft:#3B1E2C}
+  :root:not([data-theme="light"])[data-tour="rojo"]{--jersey:#E1232D; --accent:#FF7A7F; --accent-soft:#401A1C}
+}
+:root[data-theme="dark"]{
+  --bg:#111215; --panel:#1A1C20; --ink:#ECEDEF; --muted:#9A9EA6; --line:#2C2F35; --soft:#22252A;
+  --accent:#FFD43B; --accent-soft:#3A3212;
+  --good:#5FC892; --warn:#E3B062; --risk:#F08A80; --pre:#B9A2F2; color-scheme:dark}
+:root[data-theme="dark"][data-tour="rosa"]{--accent:#F7A3C8; --accent-soft:#3B1E2C}
+:root[data-theme="dark"][data-tour="rojo"]{--jersey:#E1232D; --accent:#FF7A7F; --accent-soft:#401A1C}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px 36px;align-items:end;padding-bottom:20px}
+@media (max-width:780px){.hero{grid-template-columns:1fr}}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+h1{font-family:var(--display);font-weight:800;font-style:italic;font-size:clamp(2.7rem,7.5vw,4.8rem);line-height:.88;letter-spacing:-.005em;margin:0;text-transform:uppercase;text-wrap:balance}
+h1 span{display:inline-block;background:var(--jersey);color:var(--on-jersey);padding:.02em .16em .04em .1em;transform:skewX(-6deg)}
+.lede{max-width:56ch;color:var(--muted);margin:14px 0 0;font-size:16.5px}
+.evid{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin:12px 0 0}
+.tours{display:grid;gap:4px;min-width:0}
+.tour-row{display:flex;gap:8px;flex-wrap:wrap}
+.tour{display:grid;justify-items:center;gap:2px;min-width:86px;padding:10px 12px 9px;font:inherit;color:var(--ink);background:var(--panel);border:1.5px solid var(--line);border-radius:6px;cursor:pointer}
+.tour svg{width:42px;height:42px;display:block}
+.tour svg path{stroke:var(--ink);stroke-width:1.4;stroke-linejoin:round}
+.tour b{font-family:var(--display);font-style:italic;font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:.03em;line-height:1}
+.tour small{font-size:11px;color:var(--muted)}
+.tour[aria-checked="true"]{border-color:var(--ink);box-shadow:inset 0 -4px 0 var(--jersey)}
+@media (prefers-reduced-motion:no-preference){.tour{transition:transform .15s,border-color .15s}.tour:hover{transform:translateY(-2px)}}
+.tricolor{display:flex;height:6px;margin-bottom:26px;border-radius:1px;overflow:hidden}
+.tricolor i{flex:1}
+.tricolor i:nth-child(1){background:var(--y)} .tricolor i:nth-child(2){background:var(--p)} .tricolor i:nth-child(3){background:var(--r)}
+.grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:24px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+form{display:grid;gap:16px}
+fieldset{border:1px solid var(--line);background:var(--panel);border-radius:6px;margin:0;padding:14px 16px 16px;display:grid;gap:12px;min-width:0}
+legend{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.05em;font-size:17px;padding:0 6px;color:var(--ink)}
+legend::before{content:"";width:16px;height:10px;background:var(--jersey);transform:skewX(-14deg);border:1px solid var(--line)}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.row.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:460px){.row,.row.three{grid-template-columns:1fr 1fr}}
+label{display:grid;gap:4px;font-size:13px;font-weight:500;min-width:0}
+label small{font-weight:400;color:var(--muted);font-size:12px}
+input,select{font:inherit;font-family:var(--mono);font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:7px 9px;width:100%;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible,.seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{display:block}
+.seg input{position:absolute;opacity:0;width:1px;height:1px}
+.seg span{display:inline-block;padding:6px 11px;border:1px solid var(--line);border-radius:999px;font-size:13px;cursor:pointer;background:var(--bg)}
+.seg input:checked+span{background:var(--jersey);border-color:var(--ink);color:var(--on-jersey);font-weight:600}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.sample{font-family:var(--mono);font-size:12px;background:var(--accent-soft);color:var(--ink);border-radius:4px;padding:8px 10px;margin:0}
+/* photo measurement */
+.pguide{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:480px){.pguide{grid-template-columns:1fr}.pguide svg{max-width:240px}}
+.pguide svg{width:100%;height:auto;display:block}
+.g-frame{fill:none;stroke:var(--muted);stroke-dasharray:4 4;stroke-width:1}
+.g-floor{stroke:var(--muted);stroke-width:1.5}
+.g-body{fill:var(--line);stroke:var(--muted);stroke-width:1.2}
+.g-limb{fill:none;stroke:var(--muted);stroke-width:7;stroke-linecap:round;stroke-linejoin:round}
+.g-book{fill:var(--accent)}
+.g-lead{fill:none;stroke:var(--muted);stroke-dasharray:2 3;stroke-width:1}
+.g-mark circle{fill:var(--jersey);stroke:var(--ink);stroke-width:1.2}
+.g-mark text{font-family:var(--mono);font-size:9.5px;font-weight:500;fill:var(--on-jersey);text-anchor:middle;dominant-baseline:central}
+.g-lbl{font-family:var(--mono);font-size:10px;fill:var(--ink)}
+.g-phone{fill:var(--panel);stroke:var(--ink);stroke-width:1.5}
+.g-wheel{fill:none;stroke:var(--muted);stroke-width:3}
+.g-bike{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.g-saddle{stroke:var(--ink);stroke-width:4;stroke-linecap:round}
+.tips{margin:0;padding-left:18px;font-size:13.5px;display:grid;gap:5px}
+.pbtns{display:flex;flex-wrap:wrap;gap:8px}
+.filebtn{position:relative;display:inline-flex;align-items:center;font-size:13px;font-weight:600;padding:8px 14px;border-radius:4px;border:1px solid var(--ink);background:var(--jersey);color:var(--on-jersey);cursor:pointer}
+.filebtn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.filebtn input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.filebtn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.pstage{display:grid;gap:8px;justify-items:center;min-width:0}
+#pcan{touch-action:none;border-radius:4px;max-width:100%;cursor:crosshair;background:var(--soft)}
+.pprompt{justify-self:stretch;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0;font-weight:600;font-size:14px}
+.pprompt .num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--jersey);color:var(--on-jersey);border:1px solid var(--ink);font-family:var(--mono);font-size:12px}
+.pprompt small{font-weight:400;color:var(--muted)}
+.presult{display:grid;gap:8px}
+.presult:empty{display:none}
+.pres{background:var(--soft);border-radius:4px;padding:12px;display:grid;gap:6px;min-width:0}
+.pres .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.pres b{font-family:var(--display);font-style:italic;font-weight:800;font-size:30px;line-height:1}
+.pres p{margin:0;font-size:13px}
+.chip{justify-self:start;display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;border:1px solid currentColor}
+.chip.ok{color:var(--good)} .chip.adj{color:var(--warn)}
+/* results */
+.results{display:grid;gap:16px;min-width:0}
+@media (min-width:901px){.results{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.card h2{font-family:var(--display);font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.04em;font-size:21px;margin:0 0 10px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.card h2 small{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:0;text-transform:none;color:var(--muted)}
+.diagram svg{width:100%;height:auto;display:block}
+.tabs{display:inline-flex;gap:4px}
+.tab{font-family:var(--mono);font-size:12px;font-weight:500;padding:4px 12px;background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:999px;letter-spacing:0;text-transform:none}
+.tab.on{background:var(--jersey);color:var(--on-jersey);border-color:var(--ink)}
+.v3d{position:relative;width:100%;aspect-ratio:3/2;max-width:100%;border-radius:4px;overflow:hidden;background:linear-gradient(180deg,var(--soft) 55%,var(--accent-soft));cursor:grab;touch-action:none}
+.v3d:active{cursor:grabbing}
+.v3d canvas{display:block;width:100%!important;height:100%!important}
+.v3dbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin:10px 0 6px}
+.v3dinfo{font-family:var(--mono);font-size:12px;color:var(--ink)}
+button.sm{padding:4px 10px;font-size:12px}
+.sheet{display:grid;gap:0}
+.item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:11px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0;padding-top:2px}
+.item .k{font-weight:600;font-size:14px}
+.item .v{font-family:var(--mono);font-weight:500;font-size:17px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.item .why{grid-column:1/-1;font-size:13px;color:var(--muted);margin:0}
+.item .delta{font-size:12px;font-family:var(--mono)}
+.up{color:var(--warn)} .ok{color:var(--good)}
+.badge{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px;border-radius:3px;border:1px solid currentColor;margin-left:6px;vertical-align:2px;white-space:nowrap}
+.b-strong{color:var(--good)} .b-mod{color:var(--warn)} .b-weak{color:var(--muted)} .b-pre{color:var(--pre)} .b-phys{color:var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+@media (max-width:460px){.stats{grid-template-columns:1fr 1fr}}
+.stat{background:var(--soft);border-radius:4px;padding:10px}
+.stat b{display:block;font-family:var(--mono);font-size:20px;font-weight:500;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+/* the race bib: key result in bib numerals */
+.stat.hl{background:var(--panel);border:2px solid var(--ink);position:relative;text-align:center;padding-top:12px}
+.stat.hl::before,.stat.hl::after{content:"";position:absolute;top:6px;width:6px;height:6px;border-radius:50%;background:var(--line);border:1px solid var(--muted)}
+.stat.hl::before{left:6px} .stat.hl::after{right:6px}
+.stat.hl b{color:var(--ink);font-family:var(--display);font-weight:800;font-style:italic;font-size:32px;line-height:1}
+.slider{display:grid;gap:4px;margin:4px 0 8px}
+input[type=range]{padding:0;accent-color:var(--accent);background:transparent;border:0}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;font-size:13px;font-weight:600;border-radius:4px;padding:8px 14px;cursor:pointer;border:1px solid var(--ink);background:var(--jersey);color:var(--on-jersey)}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button.ghost:hover{border-color:var(--ink)}
+textarea{position:absolute;left:-9999px}
+.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14px}
+.warnbox{border-left:3px solid var(--warn);background:var(--soft);padding:10px 12px;font-size:13px;border-radius:0 4px 4px 0;margin:0}
+.refs{font-size:12.5px;color:var(--muted);display:grid;gap:4px;margin:0;padding-left:18px}
+.refs a{color:var(--accent)}
+footer{margin-top:28px;font-size:12px;color:var(--muted);max-width:75ch}
+@media (prefers-reduced-motion:no-preference){.v,.stat b{transition:color .2s}}
+</style>
+
+<div class="wrap">
+<header class="hero">
+  <div>
+    <p class="eyebrow">Bike fit lab · built on published research</p>
+    <h1>Find the <span>watts</span><br>in your saddle</h1>
+    <p class="lede">Enter your body and your bike. In under a minute you get a starting saddle setup, a 3D view of your position, and how many watts a better aero position is worth at your race speed.</p>
+    <p class="evid">Evidence base: Husband 2024 · Fintelman 2014/15 · Faulkner 2024 · Bini 2010/14 · Martin 2001</p>
+  </div>
+  <div class="tours">
+    <p class="eyebrow">Ride in the colours of</p>
+    <div class="tour-row" role="radiogroup" aria-label="Colour theme">
+      <button type="button" class="tour" role="radio" aria-checked="true" data-tour="jaune"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 5l-9 4-5 11 6 3 3-5v25h26V18l3 5 6-3-5-11-9-4c-1 3-4 5-8 5s-7-2-8-5z" style="fill:var(--y)"/></svg><b>Jaune</b><small>Yellow jersey</small></button>
+      <button type="button" class="tour" role="radio" aria-checked="false" data-tour="rosa"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 5l-9 4-5 11 6 3 3-5v25h26V18l3 5 6-3-5-11-9-4c-1 3-4 5-8 5s-7-2-8-5z" style="fill:var(--p)"/></svg><b>Rosa</b><small>Pink jersey</small></button>
+      <button type="button" class="tour" role="radio" aria-checked="false" data-tour="rojo"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 5l-9 4-5 11 6 3 3-5v25h26V18l3 5 6-3-5-11-9-4c-1 3-4 5-8 5s-7-2-8-5z" style="fill:var(--r)"/></svg><b>Rojo</b><small>Red jersey</small></button>
+    </div>
+  </div>
+</header>
+<div class="tricolor" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<div class="grid">
+<form id="f" novalidate>
+  <p class="sample">Pre-filled with an example rider. Replace every value with your own.</p>
+
+  <fieldset id="photoBox">
+    <legend>Measure from a photo</legend>
+    <div class="tabs" role="tablist" aria-label="Photo type">
+      <button type="button" role="tab" id="pmStand" class="tab on" aria-selected="true">Standing · inseam</button>
+      <button type="button" role="tab" id="pmBike" class="tab" aria-selected="false">On the bike · knee check</button>
+    </div>
+
+    <div class="pguide" id="pgStand">
+      <svg viewBox="0 0 250 200" role="img" aria-label="How to stand: facing the camera, a book pulled up between the legs, whole body in frame, phone at hip height">
+        <rect x="44" y="4" width="72" height="190" rx="4" class="g-frame"/>
+        <line x1="8" y1="188" x2="214" y2="188" class="g-floor"/>
+        <circle cx="80" cy="26" r="12" class="g-body"/>
+        <rect x="66" y="42" width="28" height="50" rx="9" class="g-body"/>
+        <path d="M68 50 L56 98 M92 50 L104 98" class="g-limb"/>
+        <rect x="68" y="90" width="10" height="96" rx="4" class="g-body"/>
+        <rect x="82" y="90" width="10" height="96" rx="4" class="g-body"/>
+        <rect x="62" y="85" width="36" height="6" rx="1" class="g-book"/>
+        <path d="M86 14 H126 M100 86 H126 M96 188 H126" class="g-lead"/>
+        <g class="g-mark"><circle cx="134" cy="14" r="8"/><text x="134" y="14">1</text></g>
+        <g class="g-mark"><circle cx="134" cy="86" r="8"/><text x="134" y="86">2</text></g>
+        <g class="g-mark"><circle cx="134" cy="186" r="8"/><text x="134" y="186">3</text></g>
+        <text x="147" y="18" class="g-lbl">Top of head</text>
+        <text x="147" y="90" class="g-lbl">Top of book</text>
+        <text x="147" y="174" class="g-lbl">Floor</text>
+        <rect x="226" y="84" width="12" height="20" rx="2" class="g-phone"/>
+        <text x="232" y="118" class="g-lbl" text-anchor="middle">phone</text>
+        <text x="232" y="129" class="g-lbl" text-anchor="middle">hip ht</text>
+      </svg>
+      <ol class="tips">
+        <li>Barefoot, facing the camera, feet about 15 cm apart.</li>
+        <li>Pull a hardback book up firmly between your legs, spine level, like a saddle.</li>
+        <li>Phone at hip height, about 3 m away, held level and square to you. Use 2× zoom if you have it.</li>
+        <li>Whole body in frame, floor visible under your heels. Someone else takes the photo.</li>
+      </ol>
+    </div>
+
+    <div class="pguide" id="pgBike" hidden>
+      <svg viewBox="0 0 250 200" role="img" aria-label="On-bike photo: side view, crank pointing straight down, phone at bottom-bracket height, mark hip, knee, ankle and shoulder">
+        <line x1="6" y1="187" x2="224" y2="187" class="g-floor"/>
+        <circle cx="48" cy="150" r="36" class="g-wheel"/>
+        <circle cx="196" cy="150" r="36" class="g-wheel"/>
+        <path d="M120 158 L102 80 L170 84 L176 104 Z M120 158 L48 150 L102 80 M176 104 L196 150 M170 84 L180 72" class="g-bike"/>
+        <path d="M88 72 H112" class="g-saddle"/>
+        <path d="M120 158 L120 182 M112 182 H130" class="g-bike"/>
+        <path d="M102 64 L134 116 L118 174 M112 180 H132" class="g-limb"/>
+        <path d="M102 64 L152 38 L178 74" class="g-limb"/>
+        <circle cx="166" cy="24" r="10" class="g-body"/>
+        <g class="g-mark"><circle cx="102" cy="64" r="8"/><text x="102" y="64">1</text></g>
+        <g class="g-mark"><circle cx="134" cy="116" r="8"/><text x="134" y="116">2</text></g>
+        <g class="g-mark"><circle cx="118" cy="174" r="8"/><text x="118" y="174">3</text></g>
+        <g class="g-mark"><circle cx="152" cy="38" r="8"/><text x="152" y="38">4</text></g>
+        <rect x="234" y="132" width="12" height="20" rx="2" class="g-phone"/>
+        <text x="240" y="166" class="g-lbl" text-anchor="middle">BB ht</text>
+      </svg>
+      <ol class="tips">
+        <li>Bike level on a trainer, you in your usual shoes and kit.</li>
+        <li>Stop pedalling with the crank on the camera side pointing straight down (6 o'clock).</li>
+        <li>Phone about 3 m to the side at bottom-bracket height, level and square to the bike.</li>
+        <li>Small stickers on your hip bone, knee and outer ankle bone make tapping more accurate.</li>
+      </ol>
+    </div>
+
+    <div class="pbtns">
+      <label class="filebtn" for="camIn">Take photo<input id="camIn" type="file" accept="image/*" capture="environment"></label>
+      <label class="filebtn ghost" for="fileIn">Choose a photo<input id="fileIn" type="file" accept="image/*"></label>
+    </div>
+
+    <div class="pstage" id="pstage" hidden>
+      <p class="pprompt" id="pprompt"></p>
+      <canvas id="pcan" aria-label="Your photo. Tap to place measurement points, drag a point to adjust it."></canvas>
+      <div class="btns">
+        <button type="button" class="ghost sm" id="pUndo">Undo last point</button>
+        <button type="button" class="ghost sm" id="pReset">Clear points</button>
+      </div>
+    </div>
+    <div class="presult" id="presult" aria-live="polite"></div>
+    <p class="hint">Your photo stays on this device. It is processed in your browser and never uploaded.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Rider physiology</legend>
+    <div class="row three">
+      <label for="height">Height <small>cm</small><input id="height" type="number" step="0.5" value="178"></label>
+      <label for="inseam">Inseam <small>cm, floor to crotch, barefoot</small><input id="inseam" type="number" step="0.5" value="84"></label>
+      <label for="weight">Weight <small>kg</small><input id="weight" type="number" step="0.5" value="72"></label>
+    </div>
+    <p class="hint">Inseam: stand against a wall, pull a book up firmly between your legs, measure from the floor to the top of the book.</p>
+    <label>Hamstring flexibility <small>straight-leg toe touch</small>
+      <div class="seg" role="radiogroup">
+        <label><input type="radio" name="flex" value="limited" id="flex-l"><span>Can't reach toes</span></label>
+        <label><input type="radio" name="flex" value="average" id="flex-a" checked><span>Fingertips touch</span></label>
+        <label><input type="radio" name="flex" value="good" id="flex-g"><span>Palms flat</span></label>
+      </div>
+    </label>
+    <label>Knee pain history
+      <div class="seg" role="radiogroup">
+        <label><input type="radio" name="knee" value="no" id="knee-n" checked><span>None</span></label>
+        <label><input type="radio" name="knee" value="yes" id="knee-y"><span>Front or back of knee</span></label>
+      </div>
+    </label>
+    <label for="ftp">FTP <small>W, optional — used for the speed estimate</small><input id="ftp" type="number" step="1" value="260"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Bike</legend>
+    <div class="row">
+      <label for="brand">Brand
+        <select id="brand">
+          <option>Canyon</option><option>Specialized</option><option>Trek</option><option>Cervélo</option>
+          <option>Giant</option><option>Cannondale</option><option>Pinarello</option><option>BMC</option>
+          <option>Scott</option><option>Factor</option><option>Orbea</option><option>Ridley</option>
+          <option>Lapierre</option><option>Look</option><option>Other</option>
+        </select>
+      </label>
+      <label for="size">Frame size <small>as printed, e.g. M, 56, 54cm</small><input id="size" type="text" value="M"></label>
+    </div>
+    <label>Bike type
+      <div class="seg" role="radiogroup">
+        <label><input type="radio" name="disc" value="road" id="disc-r" checked><span>Road bike</span></label>
+        <label><input type="radio" name="disc" value="tt" id="disc-t"><span>TT / triathlon</span></label>
+      </div>
+    </label>
+    <div class="row">
+      <label for="sta">Seat tube angle <small>° from the brand's geometry chart</small><input id="sta" type="number" step="0.1" value="73.5"></label>
+      <label for="curCrank">Current crank length <small>mm, stamped on the crank arm</small><input id="curCrank" type="number" step="2.5" value="172.5"></label>
+    </div>
+    <div class="row">
+      <label for="curHeight">Current saddle height <small>mm, BB centre to saddle top, along the seat tube</small><input id="curHeight" type="number" step="1" value="735"></label>
+      <label for="curSetback">Current setback <small>mm, saddle tip behind BB, optional</small><input id="curSetback" type="number" step="1" value=""></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Goal &amp; event</legend>
+    <label>What do you want to optimise?
+      <div class="seg" role="radiogroup">
+        <label><input type="radio" name="goal" value="power" id="goal-p"><span>Peak power (short efforts)</span></label>
+        <label><input type="radio" name="goal" value="balanced" id="goal-b" checked><span>Balanced</span></label>
+        <label><input type="radio" name="goal" value="endurance" id="goal-e"><span>Economy (long events)</span></label>
+      </div>
+    </label>
+    <div class="row">
+      <label for="speed">Typical race speed <small>km/h, flat</small><input id="speed" type="number" step="0.5" value="36"></label>
+      <label for="cda">Current CdA <small>m², leave if unknown</small><input id="cda" type="number" step="0.005" value="0.300"></label>
+    </div>
+    <p class="hint">CdA defaults are rough typical values (road drops ≈ 0.30, TT ≈ 0.25). To be verified with a field test or an aero sensor.</p>
+  </fieldset>
+</form>
+
+<div class="results" aria-live="polite">
+  <section class="card diagram">
+    <h2>Target position
+      <span class="tabs" role="tablist">
+        <button type="button" role="tab" id="tab3d" class="tab on" aria-selected="true">3D</button>
+        <button type="button" role="tab" id="tab2d" class="tab" aria-selected="false">Angles</button>
+      </span>
+    </h2>
+    <div id="pane3d">
+      <div class="v3d" id="v3d" aria-label="3D model of the rider on the bike, drag to rotate"></div>
+      <div class="v3dbar">
+        <span id="v3dInfo" class="v3dinfo"></span>
+        <span class="btns">
+          <button type="button" class="ghost sm" data-view="side">Side</button>
+          <button type="button" class="ghost sm" data-view="three">3/4</button>
+          <button type="button" class="ghost sm" data-view="front">Front</button>
+        </span>
+      </div>
+      <p class="hint">Drag to rotate, scroll or pinch to zoom. Proportions are generic body ratios scaled to your height, so treat it as an illustration of the angles, not a scan of you.</p>
+    </div>
+    <div id="pane2d" hidden>
+      <svg id="svg" viewBox="0 0 420 280" role="img" aria-label="Side view of rider position"></svg>
+      <p class="hint">Schematic, not to scale.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Setup sheet <small id="bikeLabel"></small></h2>
+    <div class="sheet" id="sheet"></div>
+    <div class="btns" style="margin-top:12px">
+      <button type="button" id="copy">Copy setup sheet</button>
+    </div>
+    <textarea id="copyText" aria-hidden="true" tabindex="-1"></textarea>
+  </section>
+
+  <section class="card">
+    <h2>Watts from aerodynamics <span class="badge b-phys">Physics model</span></h2>
+    <div class="stats" id="stats"></div>
+    <div class="slider">
+      <label for="dcda">CdA reduction to test: <span id="dcdaVal" style="font-family:var(--mono)"></span></label>
+      <input id="dcda" type="range" min="0.002" max="0.04" step="0.001" value="0.010">
+    </div>
+    <p class="hint" id="aeroNote"></p>
+  </section>
+
+  <section class="card">
+    <h2>Validate it on you</h2>
+    <p class="warnbox">Faulkner et al. (2024) found that the same 1–3 cm change made some riders faster and others slower. Treat every number here as a starting point and test it.</p>
+    <ol class="steps" style="margin-top:10px">
+      <li>Change one thing at a time. Saddle height first, then setback, then front end.</li>
+      <li>Film yourself side-on at race effort. Check the knee bend at the bottom of the stroke falls in your target range.</li>
+      <li>Ride 2–3 weeks before judging comfort. Studies show trained riders adapt to aero positions.</li>
+      <li>Measure: same course, same power, compare speed. An aero sensor or velodrome laps give CdA directly.</li>
+      <li>Keep the change only if speed improves without new pain.</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>Sources</h2>
+    <ul class="refs">
+      <li><a href="https://doi.org/10.1080/02640414.2024.2394752" target="_blank" rel="noopener">Husband et al. 2024, systematic review</a> — knee 25–35°, saddle fore-aft and hip angle</li>
+      <li><a href="https://doi.org/10.1016/j.jbiomech.2014.02.029" target="_blank" rel="noopener">Fintelman et al. 2014</a> — optimal torso angle vs speed</li>
+      <li><a href="https://doi.org/10.1080/02640414.2015.1009936" target="_blank" rel="noopener">Fintelman et al. 2015</a> — physiological cost of low torso</li>
+      <li><a href="https://link.springer.com/article/10.1007/s12283-023-00446-0" target="_blank" rel="noopener">Faulkner et al. 2024</a> — individual CdA responses, CdA 0.2467 m² group mean</li>
+      <li><a href="https://pubmed.ncbi.nlm.nih.gov/20811079/" target="_blank" rel="noopener">Bini et al. 2010</a> — saddle height and joint work</li>
+      <li><a href="https://doi.org/10.1007/s004210100400" target="_blank" rel="noopener">Martin &amp; Spirduso 2001</a> — crank length and maximal power</li>
+    </ul>
+  </section>
+</div>
+</div>
+
+<footer>This configurator gives research-informed starting points, not a professional bike fit. The saddle-height formula (LeMond, 0.883 × inseam) and the mm-per-degree conversion are approximations: verify the actual knee angle on video. The brand and size are used to label your sheet; this page does not hold manufacturers' geometry, so read the seat tube angle from your brand's official chart. If you have pain, see a qualified bike fitter or physiotherapist. The colour themes are inspired by the leader's jerseys of cycling's three Grand Tours; this tool is not affiliated with or endorsed by their organisers.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const ids=["height","inseam","weight","ftp","brand","size","sta","curCrank","curHeight","curSetback","speed","cda"];
+const radios=["flex","knee","disc","goal"];
+const KEY="saddle-config-v1";
+const CRANKS=[145,150,155,160,162.5,165,167.5,170,172.5,175];
+
+function num(id){const v=parseFloat($(id).value);return isFinite(v)?v:null}
+function rad(n){const r=document.querySelector('input[name="'+n+'"]:checked');return r?r.value:null}
+function nearest(arr,x){return arr.reduce((a,b)=>Math.abs(b-x)<Math.abs(a-x)?b:a)}
+function fmt(x,d){return x==null||!isFinite(x)?"—":x.toFixed(d)}
+function sign(x,d){return (x>0?"+":x<0?"−":"±")+Math.abs(x).toFixed(d)}
+
+// restore
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s){ids.forEach(i=>{if(s[i]!=null)$(i).value=s[i]});radios.forEach(n=>{if(s[n]){const r=document.querySelector('input[name="'+n+'"][value="'+s[n]+'"]');if(r)r.checked=true}})}}catch(e){}
+function save(){try{const s={};ids.forEach(i=>s[i]=$(i).value);radios.forEach(n=>s[n]=rad(n));localStorage.setItem(KEY,JSON.stringify(s))}catch(e){}}
+
+// physics: rider power needed for speed v (m/s)
+const RHO=1.2,G=9.81,CRR=0.004,DRIVE=0.97;
+function powerAt(v,cda,m){return (0.5*RHO*cda*v*v*v + CRR*m*G*v)/DRIVE}
+function speedFor(P,cda,m){let lo=0.1,hi=30;for(let i=0;i<60;i++){const mid=(lo+hi)/2;if(powerAt(mid,cda,m)>P)hi=mid;else lo=mid}return (lo+hi)/2}
+
+let prevDisc=rad("disc");
+function compute(){
+  const disc=rad("disc"),goal=rad("goal"),flex=rad("flex"),knee=rad("knee");
+  // switch defaults when the bike type changes
+  if(disc!==prevDisc){
+    if(disc==="tt"){ if(num("sta")===73.5) $("sta").value="78"; if(num("cda")===0.3) $("cda").value="0.250"; }
+    else { if(num("sta")===78) $("sta").value="73.5"; if(num("cda")===0.25) $("cda").value="0.300"; }
+    prevDisc=disc;
+  }
+  const H=num("height")||178, I=num("inseam")||84, W=num("weight")||72;
+  const sta=num("sta"), curH=num("curHeight"), curC=num("curCrank"), curSB=num("curSetback");
+  const speed=num("speed")||36, cda=num("cda")||(disc==="tt"?0.25:0.30), ftp=num("ftp");
+  const notes=[];
+
+  // 1. knee flexion target at bottom dead centre
+  let kneeT={power:26,balanced:30,endurance:33}[goal];
+  let kneeWhy={power:"Higher saddle (~25°) produced the highest peak power in the studies reviewed.",balanced:"Middle of the 25–35° consensus range.",endurance:"Lower end of saddle height (~33–35°) favours economy for long events."}[goal];
+  if(knee==="yes"&&kneeT<30){kneeT=30;kneeWhy+=" Capped at 30° because of your knee history; the effect of saddle height on knee loads is mixed in the research.";}
+  if(flex==="limited"){kneeT=Math.min(35,kneeT+2);kneeWhy+=" +2° for limited hamstring flexibility (saddle height correlates with hamstring flexibility, Holliday & Swart 2021; adjustment size to be verified).";}
+
+  // 2. crank length
+  const crankRaw=0.20*I*10;
+  let crank=nearest(CRANKS,crankRaw);
+  if(disc==="tt") crank=nearest(CRANKS,crank-5);
+  const crankWhy=disc==="tt"
+    ? "≈20% of leg length (Martin & Spirduso 2001, inseam used as proxy), then one size shorter: shorter cranks open the hip so the torso can go lower. A 2026 preprint estimates ≈1.4° more hip angle per 10 mm shorter (not yet peer-reviewed). Maximal power changes very little across normal lengths."
+    : "≈20% of leg length (Martin & Spirduso 2001, inseam used as proxy). Maximal power varied only ~4% from 120 to 220 mm, so change only if you want a more open hip or a higher cadence.";
+
+  // 3. saddle height: LeMond 0.883 × inseam (assumed ~30° knee, 170 mm cranks), ≈0.3% height per degree (Bini: ±10° ≈ ±3%)
+  const base=0.883*I*10;
+  const sh=c=>base*(1+0.003*(30-kneeT))+(170-c);
+  const height=sh(crank), heightCur=curC?sh(curC):null;
+  const lo=base*(1+0.003*(30-(kneeT+2)))+(170-crank), hi=base*(1+0.003*(30-(kneeT-2)))+(170-crank);
+
+  // 4. effective seat angle and setback
+  const esaT=disc==="tt"?79.5:{power:74,balanced:73.5,endurance:73}[goal];
+  const setback=height*Math.cos(esaT*Math.PI/180);
+  const esaWhy=disc==="tt"
+    ? "A forward saddle (steep effective seat angle, 78–81°) opens the hip so you can hold a low torso. Under UCI rules the saddle tip must sit at least 5 cm behind the BB for most riders (verify the current rule); triathlon has no such limit."
+    : "Road range ~73–74.5°. Moving the saddle back improved pedalling effectiveness in Menard 2016; moving it forward opens the hip. Effects on knee loads conflict between studies.";
+
+  // 5. torso angle by speed (Fintelman 2014; intermediate bands interpolated)
+  let torso,torsoLbl;
+  if(speed<30){torso=[16,24];torsoLbl="Below 30 km/h a more upright position wins."}
+  else if(speed<38){torso=[12,16];torsoLbl="Interpolated band between the model's 30 and 46 km/h anchors (to be verified)."}
+  else if(speed<46){torso=[8,12];torsoLbl="Interpolated band; aero becomes the bigger factor as speed rises (to be verified)."}
+  else {torso=[4,8];torsoLbl="Above 46 km/h aero losses outweigh power losses, but a fully flat back (0°) was never optimal."}
+  if(disc==="road") torsoLbl+=" On a road bike this is your back angle in the drops.";
+  const torsoMid=(torso[0]+torso[1])/2;
+
+  // render sheet
+  const bikeLbl=$("brand").value+" · size "+($("size").value||"?")+" · "+(disc==="tt"?"TT/tri":"road");
+  $("bikeLabel").textContent=bikeLbl;
+  const dH=curH!=null?height-curH:null;
+  let rows=[];
+  rows.push({k:"Saddle height",b:'<span class="badge b-strong">Consensus</span>',v:fmt(height,0)+" mm",
+    d:dH!=null?'<span class="delta '+(Math.abs(dH)<=3?"ok":"up")+'">'+sign(dH,0)+" mm vs now</span>":"",
+    w:"BB centre to saddle top, along the seat tube, with "+crank+" mm cranks. Range "+fmt(lo,0)+"–"+fmt(hi,0)+" mm. "+(heightCur&&crank!==curC?"Keeping your "+curC+" mm cranks: "+fmt(heightCur,0)+" mm. ":"")+"Formulas alone hit the right knee angle only part of the time (109% inseam: 37% of cases), so confirm on video."});
+  rows.push({k:"Knee bend at bottom of stroke",b:'<span class="badge b-strong">Consensus</span>',v:(kneeT-2)+"–"+(kneeT+2)+"°",w:kneeWhy});
+  rows.push({k:"Crank length",b:'<span class="badge b-weak">No clear rec.</span>',v:crank+" mm",
+    d:curC?'<span class="delta '+(curC===crank?"ok":"up")+'">'+(curC===crank?"keep current":"now "+curC+" mm")+"</span>":"",w:crankWhy});
+  rows.push({k:"Effective seat angle",b:'<span class="badge b-mod">Moderate</span>',v:esaT.toFixed(1)+"°",
+    d:sta?'<span class="delta '+(Math.abs(sta-esaT)<=1.5?"ok":"up")+'">frame '+sta.toFixed(1)+"°</span>":"",
+    w:esaWhy+(sta&&Math.abs(sta-esaT)>1.5?" Your frame angle is "+Math.abs(sta-esaT).toFixed(1)+"° away: you may need a different seatpost offset or saddle rail position.":"")});
+  rows.push({k:"Saddle top behind BB",b:'<span class="badge b-mod">Derived</span>',v:fmt(setback,0)+" mm",
+    d:curSB!=null?'<span class="delta">tip now '+fmt(curSB,0)+" mm</span>":"",
+    w:"Horizontal distance from the BB centre to the saddle-height measuring point, from height × cos(seat angle). This is not the same point as the saddle tip."});
+  rows.push({k:"Torso angle to target",b:'<span class="badge b-mod">Model</span>',v:torso[0]+"–"+torso[1]+"°",w:"Back angle above horizontal at "+speed+" km/h. "+torsoLbl+" Lower torso angles raise oxygen cost and lower peak power (Fintelman 2015), so train in the position."});
+
+  $("sheet").innerHTML=rows.map(r=>'<div class="item"><div class="k">'+r.k+r.b+'</div><div class="v">'+r.v+(r.d?'<br>'+r.d:'')+'</div><p class="why">'+r.w+'</p></div>').join("");
+
+  // aero
+  const m=W+(disc==="tt"?9:8), v=speed/3.6, dcda=parseFloat($("dcda").value);
+  $("dcdaVal").textContent="−"+dcda.toFixed(3)+" m²";
+  const P0=powerAt(v,cda,m), P1=powerAt(v,Math.max(0.12,cda-dcda),m), saved=P0-P1;
+  const Pref=ftp||P0;
+  const v0=speedFor(Pref,cda,m), v1=speedFor(Pref,Math.max(0.12,cda-dcda),m);
+  const t0=40000/v0, t1=40000/v1, dt=t0-t1;
+  const per01=P0-powerAt(v,cda-0.01,m);
+  $("stats").innerHTML=
+    '<div class="stat"><b>'+fmt(P0,0)+' W</b><span>to hold '+speed+' km/h now</span></div>'+
+    '<div class="stat hl"><b>−'+fmt(saved,0)+' W</b><span>same speed, CdA −'+dcda.toFixed(3)+'</span></div>'+
+    '<div class="stat"><b>−'+Math.floor(dt/60)+':'+String(Math.round(dt%60)).padStart(2,"0")+'</b><span>40 km at '+fmt(Pref,0)+' W'+(ftp?' (FTP)':'')+'</span></div>';
+  $("aeroNote").textContent="Each 0.01 m² of CdA is worth ≈"+fmt(per01,0)+" W at "+speed+" km/h. Assumes air density 1.2 kg/m³, Crr 0.004, 3% drivetrain loss, bike "+(m-W)+" kg, flat road, no wind. Faulkner 2024 measured changes as small as 0.002 m² and treated 1% (~34 s over 40 km) as meaningful. This does not include any power you lose in a lower position — measure that yourself.";
+
+  drawSVG(H,height,crank,esaT,kneeT,torsoMid,disc);
+  draw3D(H,height,crank,esaT,kneeT,torsoMid,disc);
+  lastFit={kneeT,height,torso};
+  prender();
+
+  // copy text
+  $("copyText").value="SADDLE SETUP — "+bikeLbl+"\n"+
+    "Rider: "+H+" cm, inseam "+I+" cm, "+W+" kg\n"+
+    "Saddle height: "+fmt(height,0)+" mm (range "+fmt(lo,0)+"–"+fmt(hi,0)+")"+(dH!=null?" ["+sign(dH,0)+" mm vs now]":"")+"\n"+
+    "Knee bend at BDC: "+(kneeT-2)+"–"+(kneeT+2)+"°\n"+
+    "Crank length: "+crank+" mm\n"+
+    "Effective seat angle: "+esaT.toFixed(1)+"° (saddle top ≈ "+fmt(setback,0)+" mm behind BB)\n"+
+    "Torso angle target: "+torso[0]+"–"+torso[1]+"° at "+speed+" km/h\n"+
+    "Aero: each −0.01 m² CdA ≈ "+fmt(per01,0)+" W at "+speed+" km/h\n"+
+    "Starting points only — verify knee angle on video and test speed at equal power.";
+  save();
+}
+
+function drawSVG(H,height,crank,esa,kneeFlex,torsoDeg,disc){
+  const s=0.2, bb={x:185,y:200};
+  const css=getComputedStyle(document.documentElement);
+  const ink=css.getPropertyValue("--ink").trim(), mut=css.getPropertyValue("--muted").trim(), acc=css.getPropertyValue("--accent").trim(), line=css.getPropertyValue("--line").trim();
+  const r=335*s, wy=bb.y-70*s, rear={x:bb.x-410*s,y:wy}, front={x:bb.x+600*s,y:wy};
+  const a=esa*Math.PI/180;
+  const seat={x:bb.x-Math.cos(a)*height*s,y:bb.y-Math.sin(a)*height*s};
+  const hip={x:seat.x+6,y:seat.y-14};
+  const pedal={x:bb.x+crank*s*0.15,y:bb.y+crank*s};
+  // two-link leg sized to show the target knee bend
+  const dx=pedal.x-hip.x, dy=pedal.y-hip.y, d=Math.hypot(dx,dy);
+  const inner=(180-kneeFlex)*Math.PI/180, L=d/Math.sqrt(2*(1-Math.cos(inner)));
+  const mid={x:hip.x+dx/2,y:hip.y+dy/2}, h=Math.sqrt(Math.max(0,L*L-(d/2)*(d/2)));
+  const nx=dy/d, ny=-dx/d; // perpendicular pointing forward
+  const kneeP={x:mid.x+nx*h,y:mid.y+ny*h};
+  const t=torsoDeg*Math.PI/180, tl=H*10*0.30*s;
+  const sh={x:hip.x+Math.cos(t)*tl,y:hip.y-Math.sin(t)*tl};
+  const hands=disc==="tt"?{x:sh.x+14,y:sh.y+30}:{x:sh.x+20,y:sh.y+44};
+  const elbow=disc==="tt"?{x:sh.x+4,y:sh.y+32}:{x:sh.x+16,y:sh.y+24};
+  const head={x:sh.x+Math.cos(t)*16+6,y:sh.y-Math.sin(t)*16-8};
+  const headTube={x:hands.x-6,y:hands.y+16};
+  const arc=(c,rr,a0,a1)=>{const p0={x:c.x+rr*Math.cos(a0),y:c.y-rr*Math.sin(a0)},p1={x:c.x+rr*Math.cos(a1),y:c.y-rr*Math.sin(a1)};return "M"+p0.x.toFixed(1)+" "+p0.y.toFixed(1)+" A"+rr+" "+rr+" 0 0 0 "+p1.x.toFixed(1)+" "+p1.y.toFixed(1)};
+  const P=p=>p.x.toFixed(1)+","+p.y.toFixed(1);
+  $("svg").innerHTML=
+    '<line x1="20" y1="'+(wy+r)+'" x2="400" y2="'+(wy+r)+'" stroke="'+line+'" stroke-width="1"/>'+
+    '<circle cx="'+rear.x+'" cy="'+rear.y+'" r="'+r+'" fill="none" stroke="'+mut+'" stroke-width="2"/>'+
+    '<circle cx="'+front.x+'" cy="'+front.y+'" r="'+r+'" fill="none" stroke="'+mut+'" stroke-width="2"/>'+
+    '<polyline points="'+P(rear)+' '+P(bb)+' '+P(seat)+' '+P(rear)+'" fill="none" stroke="'+mut+'" stroke-width="2.5"/>'+
+    '<polyline points="'+P(seat)+' '+P(headTube)+' '+P(bb)+'" fill="none" stroke="'+mut+'" stroke-width="2.5"/>'+
+    '<line x1="'+headTube.x+'" y1="'+headTube.y+'" x2="'+front.x+'" y2="'+front.y+'" stroke="'+mut+'" stroke-width="2.5"/>'+
+    '<line x1="'+(seat.x-12)+'" y1="'+(seat.y-2)+'" x2="'+(seat.x+14)+'" y2="'+(seat.y-2)+'" stroke="'+ink+'" stroke-width="4" stroke-linecap="round"/>'+
+    '<line x1="'+bb.x+'" y1="'+bb.y+'" x2="'+pedal.x+'" y2="'+pedal.y+'" stroke="'+ink+'" stroke-width="3"/>'+
+    '<circle cx="'+bb.x+'" cy="'+bb.y+'" r="6" fill="'+line+'" stroke="'+ink+'" stroke-width="1.5"/>'+
+    '<polyline points="'+P(hip)+' '+P(kneeP)+' '+P(pedal)+'" fill="none" stroke="'+acc+'" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>'+
+    '<polyline points="'+P(hip)+' '+P(sh)+'" fill="none" stroke="'+acc+'" stroke-width="6" stroke-linecap="round"/>'+
+    '<polyline points="'+P(sh)+' '+P(elbow)+' '+P(hands)+'" fill="none" stroke="'+acc+'" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'+
+    '<circle cx="'+head.x+'" cy="'+head.y+'" r="10" fill="'+acc+'"/>'+
+    '<line x1="'+(pedal.x-8)+'" y1="'+(pedal.y+2)+'" x2="'+(pedal.x+12)+'" y2="'+(pedal.y+2)+'" stroke="'+ink+'" stroke-width="3" stroke-linecap="round"/>'+
+    '<line x1="'+hip.x+'" y1="'+hip.y+'" x2="'+(hip.x+48)+'" y2="'+hip.y+'" stroke="'+mut+'" stroke-dasharray="3 3"/>'+
+    '<path d="'+arc(hip,34,0,t)+'" fill="none" stroke="'+ink+'" stroke-width="1.2"/>'+
+    '<text x="'+(hip.x+40)+'" y="'+(hip.y-6)+'" font-family="IBM Plex Mono,monospace" font-size="11" fill="'+ink+'">torso '+torsoDeg.toFixed(0)+'°</text>'+
+    '<text x="'+(kneeP.x+10)+'" y="'+(kneeP.y+4)+'" font-family="IBM Plex Mono,monospace" font-size="11" fill="'+ink+'">knee '+kneeFlex+'° flex</text>'+
+    '<text x="'+(bb.x+12)+'" y="'+(bb.y-6)+'" font-family="IBM Plex Mono,monospace" font-size="10" fill="'+mut+'">BB</text>'+
+    '<text x="'+(seat.x-70)+'" y="'+(seat.y-8)+'" font-family="IBM Plex Mono,monospace" font-size="10" fill="'+mut+'">'+Math.round(height)+' mm</text>'+
+    '<text x="20" y="274" font-family="IBM Plex Mono,monospace" font-size="10" fill="'+mut+'">seat angle '+esa.toFixed(1)+'° · crank '+crank+' mm · pedal at bottom dead centre</text>';
+}
+
+// ---------- 3D model ----------
+const reduceMotion=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+let T=null;
+function init3D(){
+  const el=$("v3d");
+  if(!window.THREE){el.innerHTML='<p class="hint" style="padding:16px">The 3D view could not load. The Angles tab shows the same position.</p>';return null}
+  let renderer;
+  try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true})}catch(e){el.innerHTML='<p class="hint" style="padding:16px">Your browser has 3D graphics turned off. The Angles tab shows the same position.</p>';return null}
+  renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+  el.appendChild(renderer.domElement);
+  const scene=new THREE.Scene();
+  const cam=new THREE.PerspectiveCamera(30,1.5,0.05,50);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x8090a0,0.75));
+  const key=new THREE.DirectionalLight(0xffffff,0.85);key.position.set(2.5,4,3);scene.add(key);
+  const rim=new THREE.DirectionalLight(0xffffff,0.35);rim.position.set(-3,2,-2);scene.add(rim);
+  const group=new THREE.Group();scene.add(group);
+  const st={renderer,scene,cam,group,el,theta:0.95,phi:0.16,r:3.9,target:new THREE.Vector3(0.08,0.62,0),auto:!reduceMotion,t0:performance.now(),dirty:true,base:0.95};
+  // orbit controls (drag + wheel + pinch)
+  let drag=null,pinch=null;const pts=new Map();
+  el.addEventListener("pointerdown",e=>{el.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});st.auto=false;
+    if(pts.size===1)drag={x:e.clientX,y:e.clientY};
+    if(pts.size===2){const [a,b]=[...pts.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y);drag=null}});
+  el.addEventListener("pointermove",e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===2&&pinch){const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);st.r=Math.min(7,Math.max(1.8,st.r*pinch/d));pinch=d;st.dirty=true;return}
+    if(drag){st.theta-=(e.clientX-drag.x)*0.008;st.phi=Math.min(1.3,Math.max(-0.05,st.phi+(e.clientY-drag.y)*0.006));drag={x:e.clientX,y:e.clientY};st.dirty=true}});
+  const up=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=null;if(pts.size===0)drag=null};
+  el.addEventListener("pointerup",up);el.addEventListener("pointercancel",up);
+  el.addEventListener("wheel",e=>{e.preventDefault();st.r=Math.min(7,Math.max(1.8,st.r*(1+Math.sign(e.deltaY)*0.08)));st.auto=false;st.dirty=true},{passive:false});
+  document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>{
+    const v=b.dataset.view;st.auto=false;st.phi=v==="front"?0.12:0.14;st.theta=v==="side"?0:v==="front"?Math.PI/2:0.95;st.r=3.9;st.dirty=true}));
+  const size=()=>{const w=el.clientWidth||600,h=el.clientHeight||400;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();st.dirty=true};
+  if(window.ResizeObserver)new ResizeObserver(size).observe(el);else window.addEventListener("resize",size);
+  size();
+  const loop=now=>{
+    if(st.auto){st.theta=st.base+0.55*Math.sin((now-st.t0)/2600);st.dirty=true}
+    if(st.dirty&&!$("pane3d").hidden){
+      const c=Math.cos(st.phi);
+      cam.position.set(st.target.x+st.r*Math.sin(st.theta)*c,st.target.y+st.r*Math.sin(st.phi),st.target.z+st.r*Math.cos(st.theta)*c);
+      cam.lookAt(st.target);renderer.render(scene,cam);st.dirty=false}
+    requestAnimationFrame(loop)};
+  requestAnimationFrame(loop);
+  return st;
+}
+
+function draw3D(H,height,crank,esa,kneeFlex,torsoDeg,disc){
+  if(!T)T=init3D();
+  if(!T)return;
+  const css=getComputedStyle(document.documentElement);
+  const tok=n=>new THREE.Color(css.getPropertyValue(n).trim()||"#888");
+  const cKit=tok("--jersey"),cFrame=tok("--ink"),cTyre=tok("--muted"),cLine=tok("--line");
+  const g=T.group;
+  while(g.children.length){const o=g.children.pop();o.traverse(x=>{if(x.geometry)x.geometry.dispose();if(x.material)x.material.dispose()})}
+  const GROUND=0.265; // axle 70 mm above BB, wheel radius 335 mm
+  const V=(x,y,z)=>new THREE.Vector3(x/1000,y/1000+GROUND,(z||0)/1000);
+  const mat=(c,rough,metal)=>new THREE.MeshStandardMaterial({color:c,roughness:rough==null?0.55:rough,metalness:metal==null?0.15:metal});
+  const mFrame=mat(cFrame,0.35,0.45),mKit=mat(cKit,0.6,0.05),mTyre=mat(cTyre,0.8,0),mSkin=mat(new THREE.Color("#c99b7a"),0.7,0),mDark=mat(cFrame,0.6,0.2),mShort=mat(new THREE.Color("#25272d"),0.75,0);
+  const UP=new THREE.Vector3(0,1,0);
+  function rod(a,b,r,m){const d=new THREE.Vector3().subVectors(b,a),len=d.length();if(len<1e-4)return;
+    const mesh=new THREE.Mesh(new THREE.CylinderGeometry(r,r,len,14),m);mesh.position.copy(a).addScaledVector(d,0.5);
+    mesh.quaternion.setFromUnitVectors(UP,d.normalize());g.add(mesh)}
+  function ball(p,r,m){const s=new THREE.Mesh(new THREE.SphereGeometry(r,20,14),m);s.position.copy(p);g.add(s);return s}
+  function limb(a,b,r,m){rod(a,b,r,m);ball(a,r,m);ball(b,r,m)}
+  function twoLink(a,b,L,dirSign){ // 2D (x,y) points, returns joint in the bend direction
+    const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),h=Math.sqrt(Math.max(0,L*L-(d/2)*(d/2)));
+    return {x:a.x+dx/2-dirSign*(dy/d)*h,y:a.y+dy/2+dirSign*(dx/d)*h}} // y-up: +1 bends forward (knee), −1 bends down/back (elbow)
+
+  const Hm=H*10, a=esa*Math.PI/180;
+  // side-plane key points (mm), BB at origin, x forward, y up
+  const seat={x:-Math.cos(a)*height,y:Math.sin(a)*height};
+  const hip={x:seat.x+30,y:seat.y+60};
+  const pR={x:crank*0.15,y:-crank}, pL={x:-crank*0.15,y:crank};
+  const dR=Math.hypot(pR.x-hip.x,pR.y-hip.y),inner=(180-kneeFlex)*Math.PI/180;
+  const Lseg=dR/Math.sqrt(2*(1-Math.cos(inner)));
+  const kR=twoLink(hip,pR,Lseg,1),kL=twoLink(hip,pL,Lseg,1);
+  const t=torsoDeg*Math.PI/180,tl=0.30*Hm;
+  const sh={x:hip.x+Math.cos(t)*tl,y:hip.y+Math.sin(t)*tl};
+  const upper=0.17*Hm,fore=0.16*Hm;
+  let hands,elbow;
+  if(disc==="tt"){elbow={x:sh.x+0.02*Hm,y:sh.y-0.15*Hm};hands={x:elbow.x+0.19*Hm,y:elbow.y+0.035*Hm}}
+  else{hands={x:sh.x+0.11*Hm,y:sh.y-0.19*Hm};elbow=twoLink(sh,hands,(upper+fore)/2,-1)}
+  const head={x:sh.x+Math.cos(t+0.5)*0.075*Hm,y:sh.y+Math.sin(t+0.5)*0.075*Hm};
+
+  // ---- bike ----
+  const rear={x:-410,y:70},front={x:590,y:70};
+  const barTop=disc==="tt"?{x:elbow.x-10,y:elbow.y-55}:{x:hands.x-70,y:hands.y-15};
+  const headTop={x:barTop.x-20,y:barTop.y-35};
+  const fdir={x:front.x-headTop.x,y:front.y-headTop.y},flen=Math.hypot(fdir.x,fdir.y);
+  const headBot={x:headTop.x+fdir.x/flen*150,y:headTop.y+fdir.y/flen*150};
+  const seatCl={x:seat.x*0.72,y:seat.y*0.72};
+  [[{x:0,y:0},seatCl,17],[seatCl,headTop,15],[{x:0,y:0},headBot,19],[headTop,headBot,20],[seatCl,seat,11]].forEach(([p,q,r])=>rod(V(p.x,p.y),V(q.x,q.y),r/1000,mFrame));
+  [-55,55].forEach(z=>{rod(V(0,0,z*0.6),V(rear.x,rear.y,z),0.009,mFrame);rod(V(seatCl.x,seatCl.y,z*0.4),V(rear.x,rear.y,z),0.008,mFrame);rod(V(headBot.x,headBot.y,z*0.3),V(front.x,front.y,z),0.011,mFrame)});
+  // wheels: tyre, rim, hub, spokes
+  [rear,front].forEach(w=>{
+    const c=V(w.x,w.y);
+    const tyre=new THREE.Mesh(new THREE.TorusGeometry(0.322,0.013,10,64),mTyre);tyre.position.copy(c);g.add(tyre);
+    const rimM=new THREE.Mesh(new THREE.TorusGeometry(0.300,0.016,6,64),mDark);rimM.position.copy(c);g.add(rimM);
+    rod(V(w.x,w.y,-55),V(w.x,w.y,55),0.012,mFrame);
+    for(let i=0;i<12;i++){const ang=i/12*Math.PI*2,z=(i%2?1:-1)*28;rod(V(w.x,w.y,z),V(w.x+Math.cos(ang)*290,w.y+Math.sin(ang)*290,0),0.0015,mDark)}});
+  // saddle
+  const sad=new THREE.Mesh(new THREE.BoxGeometry(0.26,0.035,0.11),mDark);sad.position.copy(V(seat.x+20,seat.y+18));g.add(sad);
+  // cockpit
+  rod(V(headTop.x,headTop.y),V(barTop.x,barTop.y),0.014,mFrame);
+  if(disc==="tt"){
+    rod(V(barTop.x,barTop.y,-200),V(barTop.x,barTop.y,200),0.013,mFrame);
+    [-80,80].forEach(z=>{rod(V(barTop.x,barTop.y,z),V(elbow.x,elbow.y,z),0.012,mFrame);rod(V(elbow.x-20,elbow.y,z),V(hands.x+40,hands.y+20,z),0.011,mFrame);
+      const pad=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.02,0.09),mDark);pad.position.copy(V(elbow.x+10,elbow.y-12,z));g.add(pad)});
+  }else{
+    rod(V(barTop.x,barTop.y,-210),V(barTop.x,barTop.y,210),0.013,mFrame);
+    [-210,210].forEach(z=>{rod(V(barTop.x,barTop.y,z),V(hands.x,hands.y,z),0.012,mFrame);rod(V(hands.x,hands.y,z),V(hands.x-60,hands.y-110,z),0.012,mFrame)});
+  }
+  // drivetrain
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(0.105,0.006,6,48),mDark);ring.position.copy(V(0,0,75));g.add(ring);
+  rod(V(0,0,-95),V(0,0,95),0.016,mFrame);
+  rod(V(0,0,90),V(pR.x,pR.y,90),0.011,mFrame);rod(V(0,0,-90),V(pL.x,pL.y,-90),0.011,mFrame);
+
+  // ---- rider ----
+  const r=s=>s*Hm/1000; // radius scaled to height (mm→m)
+  [[kR,pR,95],[kL,pL,-95]].forEach(([k,p,z])=>{
+    limb(V(hip.x,hip.y,z),V(k.x,k.y,z),r(0.033),mShort);
+    rod(V(k.x,k.y,z),V(p.x,p.y-10,z),r(0.024),mSkin);ball(V(k.x,k.y,z),r(0.026),mSkin);
+    const shoe=new THREE.Mesh(new THREE.BoxGeometry(0.27,0.06,0.09),mDark);shoe.position.copy(V(p.x+30,p.y+10,z));g.add(shoe)});
+  // pelvis + torso
+  rod(V(hip.x,hip.y,-110),V(hip.x,hip.y,110),r(0.05),mShort);
+  const torsoMid={x:(hip.x+sh.x)/2,y:(hip.y+sh.y)/2};
+  const tor=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),mKit);
+  tor.scale.set(tl/2000*1.05,r(0.075),r(0.115));tor.position.copy(V(torsoMid.x,torsoMid.y));tor.rotation.z=t;g.add(tor);
+  rod(V(sh.x,sh.y,-170),V(sh.x,sh.y,170),r(0.04),mKit);
+  // arms
+  const hz=disc==="tt"?80:200;
+  [1,-1].forEach(sg=>{
+    limb(V(sh.x,sh.y,170*sg),V(elbow.x,elbow.y,(disc==="tt"?90:190)*sg),r(0.026),mKit);
+    rod(V(elbow.x,elbow.y,(disc==="tt"?90:190)*sg),V(hands.x,hands.y,hz*sg),r(0.02),mSkin);
+    ball(V(elbow.x,elbow.y,(disc==="tt"?90:190)*sg),r(0.021),mSkin);ball(V(hands.x,hands.y,hz*sg),r(0.024),mDark)});
+  // head + helmet
+  rod(V(sh.x,sh.y),V(head.x,head.y),r(0.03),mSkin);
+  ball(V(head.x,head.y),r(0.06),mSkin);
+  const helm=new THREE.Mesh(new THREE.SphereGeometry(r(0.072),24,16,0,Math.PI*2,0,Math.PI*0.55),mKit);
+  helm.position.copy(V(head.x,head.y+8));helm.rotation.z=-0.35;
+  if(disc==="tt")helm.scale.set(1.55,0.95,1);
+  g.add(helm);
+
+  // ground
+  const grid=new THREE.GridHelper(4,20,cLine,cLine);grid.position.y=0;g.add(grid);
+  const shadow=new THREE.Mesh(new THREE.CircleGeometry(0.75,48),new THREE.MeshBasicMaterial({color:cFrame,transparent:true,opacity:0.08}));
+  shadow.rotation.x=-Math.PI/2;shadow.position.set(0.09,0.002,0);shadow.scale.set(1.3,0.35,1);g.add(shadow);
+
+  $("v3dInfo").textContent="saddle "+Math.round(height)+" mm · knee "+kneeFlex+"° · torso "+torsoDeg.toFixed(0)+"° · seat "+esa.toFixed(1)+"°";
+  T.dirty=true;
+}
+
+// ---------- photo measurement ----------
+let lastFit=null,pmode="stand",pview=null,pdrag=null;
+const PM={
+  stand:{need:3,max:3,labels:["Tap the top of the head","Tap the top of the book","Tap the floor at the heel"]},
+  bike:{need:3,max:4,labels:["Tap the hip bone (side of the hip)","Tap the centre of the side of the knee","Tap the outer ankle bone","Optional: tap the shoulder to check torso angle"]}
+};
+const PS={stand:{img:null,url:null,pts:[]},bike:{img:null,url:null,pts:[]}};
+const pcol=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function loadPhoto(file){
+  if(!file)return;
+  const st=PS[pmode];
+  if(file.type&&!/^image\//.test(file.type)){$("pstage").hidden=false;$("pprompt").textContent="That file is not an image. Choose a JPG, PNG or HEIC photo.";return}
+  const url=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{if(st.url)URL.revokeObjectURL(st.url);st.img=im;st.url=url;st.pts=[];prender()};
+  im.onerror=()=>{URL.revokeObjectURL(url);$("pstage").hidden=false;$("pprompt").textContent="This photo could not be opened in your browser. Try a JPG or PNG."};
+  im.src=url;
+}
+["camIn","fileIn"].forEach(id=>$(id).addEventListener("change",e=>{e.stopPropagation();loadPhoto(e.target.files&&e.target.files[0]);e.target.value=""}));
+
+function pdraw(loupeAt){
+  const st=PS[pmode],c=$("pcan");
+  if(!st.img){pview=null;return}
+  const wrapW=$("pstage").clientWidth||300,maxH=Math.max(260,Math.min(window.innerHeight*0.65,640));
+  const iw=st.img.naturalWidth,ih=st.img.naturalHeight,sc=Math.min(wrapW/iw,maxH/ih);
+  const w=Math.max(1,Math.round(iw*sc)),h=Math.max(1,Math.round(ih*sc)),dpr=Math.min(2,window.devicePixelRatio||1);
+  c.style.width=w+"px";c.style.height=h+"px";
+  if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr)}
+  pview={sc,w,h};
+  const x=c.getContext("2d"),J=pcol("--jersey")||"#FFD200",OJ=pcol("--on-jersey")||"#111";
+  x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);x.drawImage(st.img,0,0,w,h);
+  const P=st.pts.map(p=>({x:p.x*sc,y:p.y*sc}));
+  const seg=(a,b)=>{x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke()};
+  x.save();x.lineWidth=3;x.strokeStyle=J;x.lineCap="round";x.shadowColor="rgba(0,0,0,.6)";x.shadowBlur=3;
+  if(pmode==="stand"){
+    if(P[0]&&P[2])seg(P[0],P[2]);
+    if(P[1]&&P[0]&&P[2]){const dx=P[2].x-P[0].x,dy=P[2].y-P[0].y,l=Math.hypot(dx,dy)||1,nx=-dy/l*22,ny=dx/l*22;seg({x:P[1].x-nx,y:P[1].y-ny},{x:P[1].x+nx,y:P[1].y+ny})}
+  }else{
+    if(P[0]&&P[1])seg(P[0],P[1]);if(P[1]&&P[2])seg(P[1],P[2]);if(P[0]&&P[3])seg(P[0],P[3]);
+  }
+  x.restore();
+  const tag=(tx,ty,t)=>{x.font="600 12px 'IBM Plex Mono',monospace";const tw=x.measureText(t).width+10;
+    const bx=Math.min(Math.max(2,tx),w-tw-2),by=Math.min(Math.max(2,ty-10),h-22);
+    x.fillStyle=J;x.fillRect(bx,by,tw,20);x.strokeStyle="#111";x.lineWidth=1;x.strokeRect(bx+.5,by+.5,tw-1,19);
+    x.fillStyle=OJ;x.textAlign="left";x.textBaseline="middle";x.fillText(t,bx+5,by+10.5)};
+  P.forEach((p,i)=>{
+    x.beginPath();x.arc(p.x,p.y,10,0,Math.PI*2);x.lineWidth=4;x.strokeStyle="#111";x.stroke();x.lineWidth=2.5;x.strokeStyle=J;x.stroke();
+    x.beginPath();x.arc(p.x,p.y,2,0,Math.PI*2);x.fillStyle=J;x.fill();
+    tag(p.x+13,p.y-14,String(i+1));
+  });
+  if(pmode==="bike"&&P[2])tag(P[1].x+16,P[1].y+16,kneeFlex(st.pts).toFixed(0)+"° knee bend");
+  if(loupeAt){
+    const L=Math.min(130,Math.round(w*0.42)),Z=3,src=L/(sc*Z),lx=(loupeAt.x*sc<w/2)?w-L-8:8,ly=8;
+    x.save();x.beginPath();x.arc(lx+L/2,ly+L/2,L/2,0,Math.PI*2);x.fillStyle="#000";x.fill();x.clip();
+    x.drawImage(st.img,loupeAt.x-src/2,loupeAt.y-src/2,src,src,lx,ly,L,L);
+    x.strokeStyle="#fff";x.lineWidth=1;x.beginPath();x.moveTo(lx+L/2,ly+8);x.lineTo(lx+L/2,ly+L-8);x.moveTo(lx+8,ly+L/2);x.lineTo(lx+L-8,ly+L/2);x.stroke();
+    x.restore();x.beginPath();x.arc(lx+L/2,ly+L/2,L/2,0,Math.PI*2);x.lineWidth=3;x.strokeStyle=J;x.stroke();
+  }
+}
+
+function kneeFlex(p){const h=p[0],k=p[1],a=p[2];const v1={x:h.x-k.x,y:h.y-k.y},v2={x:a.x-k.x,y:a.y-k.y};
+  const c=(v1.x*v2.x+v1.y*v2.y)/((Math.hypot(v1.x,v1.y)*Math.hypot(v2.x,v2.y))||1);return 180-Math.acos(Math.max(-1,Math.min(1,c)))*180/Math.PI}
+
+let insFromPhoto=null;
+function standResult(p){
+  const H=num("height");
+  if(!H)return '<div class="pres"><p>Enter your height in the Rider physiology section first. It sets the scale of the photo.</p></div>';
+  const hd=p[0],cr=p[1],fl=p[2],ax={x:fl.x-hd.x,y:fl.y-hd.y},L=Math.hypot(ax.x,ax.y)||1;
+  const proj=((fl.x-cr.x)*ax.x+(fl.y-cr.y)*ax.y)/L,ins=proj/L*H,ratio=ins/H;
+  const tilt=Math.abs(Math.atan2(ax.x,ax.y)*180/Math.PI);
+  insFromPhoto=Math.round(ins*10)/10;
+  let s='<div class="pres"><span class="k">Inseam from photo</span><b>'+insFromPhoto.toFixed(1)+' cm</b>'+
+    '<p>'+(ratio*100).toFixed(1)+'% of your '+H+' cm height, measured along the head-to-floor line.</p>';
+  if(ratio<0.40||ratio>0.53)s+='<span class="chip adj">Check your points</span><p>That ratio is unusual for adults. Make sure point 2 is on the top of the book and point 3 on the floor.</p>';
+  if(tilt>4)s+='<span class="chip adj">Photo tilted '+tilt.toFixed(0)+'°</span><p>Hold the phone level and square to the body, then retake for a better result.</p>';
+  s+='<p>Perspective and posture can shift a photo measurement by a centimetre or more. Compare with a tape-measure reading if you can.</p>';
+  const cur=num("inseam");
+  s+=(cur!=null&&Math.abs(cur-insFromPhoto)<0.05)?'<span class="chip ok">In use as your inseam</span>':'<div class="btns"><button type="button" id="useIns">Use '+insFromPhoto.toFixed(1)+' cm as my inseam</button></div>';
+  return s+'</div>';
+}
+function bikeResult(p){
+  const F=lastFit;if(!F)return "";
+  const f=kneeFlex(p),lo=F.kneeT-2,hi=F.kneeT+2;let s='<div class="pres"><span class="k">Knee bend at the bottom of the stroke</span><b>'+f.toFixed(0)+'°</b>';
+  if(f>=lo&&f<=hi)s+='<span class="chip ok">In your target range</span><p>Matches the '+lo+'–'+hi+'° target for your goal. Keep the saddle where it is.</p>';
+  else{const mm=Math.abs(f-F.kneeT)*0.003*F.height,up=f>hi;
+    s+='<span class="chip adj">Saddle looks '+(up?'low':'high')+'</span><p>Your knee is '+(up?'more bent':'straighter')+' than the '+lo+'–'+hi+'° target. Try '+(up?'raising':'lowering')+' the saddle about '+mm.toFixed(0)+' mm, in steps of 2–3 mm, then retake the photo.</p>'}
+  if(p[3]){const t=Math.atan2(p[0].y-p[3].y,Math.abs(p[3].x-p[0].x))*180/Math.PI,[a,b]=F.torso;
+    s+='<span class="k" style="margin-top:6px">Torso angle above horizontal</span><b>'+t.toFixed(0)+'°</b>'+
+      (t>=a&&t<=b?'<span class="chip ok">In the model range</span>':'<span class="chip adj">Model range '+a+'–'+b+'°</span>')+
+      '<p>'+(t>b?'Lower front end or longer reach brings the torso down.':t<a?'Your torso is lower than the speed model suggests. Check you can still hold power.':'Matches the range for your race speed.')+'</p>'}
+  s+='<p>The mm suggestion uses ≈0.3% of saddle height per degree, an approximation from Bini et al. Knee angles while pedalling can differ from a still photo, so confirm with a short side-on video (to be verified).</p>';
+  return s+'</div>';
+}
+
+function prender(){
+  const st=PS[pmode],cfg=PM[pmode];
+  $("pmStand").classList.toggle("on",pmode==="stand");$("pmStand").setAttribute("aria-selected",pmode==="stand");
+  $("pmBike").classList.toggle("on",pmode==="bike");$("pmBike").setAttribute("aria-selected",pmode==="bike");
+  $("pgStand").hidden=pmode!=="stand";$("pgBike").hidden=pmode!=="bike";
+  $("pstage").hidden=!st.img;
+  if(st.img){const n=st.pts.length;
+    $("pprompt").innerHTML=n<cfg.max?'<span class="num">'+(n+1)+'</span>'+cfg.labels[n]+(n>=cfg.need?' <small>or stop here</small>':''):'All points placed. Drag any point to fine-tune it.'}
+  pdraw();
+  $("presult").innerHTML=st.img&&st.pts.length>=cfg.need?(pmode==="stand"?standResult(st.pts):bikeResult(st.pts)):"";
+  const u=$("useIns");
+  if(u)u.addEventListener("click",()=>{$("inseam").value=insFromPhoto.toFixed(1);$("inseam").dispatchEvent(new Event("input",{bubbles:true}))});
+}
+
+const pc=$("pcan");
+const toImg=e=>{const r=pc.getBoundingClientRect(),st=PS[pmode];
+  return {x:Math.max(0,Math.min(st.img.naturalWidth,(e.clientX-r.left)/pview.sc)),y:Math.max(0,Math.min(st.img.naturalHeight,(e.clientY-r.top)/pview.sc))}};
+pc.addEventListener("pointerdown",e=>{
+  if(!pview)return;const st=PS[pmode],p=toImg(e);
+  let idx=-1,best=26/pview.sc;st.pts.forEach((q,i)=>{const d=Math.hypot(q.x-p.x,q.y-p.y);if(d<best){best=d;idx=i}});
+  let off={x:0,y:0};
+  if(idx<0){if(st.pts.length>=PM[pmode].max)return;st.pts.push(p);idx=st.pts.length-1}
+  else off={x:st.pts[idx].x-p.x,y:st.pts[idx].y-p.y};
+  pdrag={idx,off};try{pc.setPointerCapture(e.pointerId)}catch(_){}
+  e.preventDefault();pdraw(st.pts[idx]);
+});
+pc.addEventListener("pointermove",e=>{if(!pdrag)return;const st=PS[pmode],p=toImg(e);
+  st.pts[pdrag.idx]={x:p.x+pdrag.off.x,y:p.y+pdrag.off.y};pdraw(st.pts[pdrag.idx])});
+const pend=()=>{if(!pdrag)return;pdrag=null;prender()};
+pc.addEventListener("pointerup",pend);pc.addEventListener("pointercancel",pend);
+$("pUndo").addEventListener("click",()=>{PS[pmode].pts.pop();prender()});
+$("pReset").addEventListener("click",()=>{PS[pmode].pts=[];prender()});
+$("pmStand").addEventListener("click",()=>{pmode="stand";prender()});
+$("pmBike").addEventListener("click",()=>{pmode="bike";prender()});
+if(window.ResizeObserver)new ResizeObserver(()=>{if(!pdrag)pdraw()}).observe($("photoBox"));
+else window.addEventListener("resize",()=>pdraw());
+
+// jersey theme
+const TKEY="saddle-tour",TOURS=["jaune","rosa","rojo"];
+function setTour(t,persist){
+  if(TOURS.indexOf(t)<0)t="jaune";
+  const root=document.documentElement;
+  if(t==="jaune")root.removeAttribute("data-tour");else root.setAttribute("data-tour",t);
+  document.querySelectorAll(".tour").forEach(b=>{const on=b.dataset.tour===t;b.setAttribute("aria-checked",on);b.tabIndex=on?0:-1});
+  if(persist){try{localStorage.setItem(TKEY,t)}catch(e){}}
+}
+let savedTour="jaune";try{savedTour=localStorage.getItem(TKEY)||"jaune"}catch(e){}
+setTour(savedTour,false);
+document.querySelectorAll(".tour").forEach((b,i,all)=>{
+  b.addEventListener("click",()=>{setTour(b.dataset.tour,true);compute()});
+  b.addEventListener("keydown",e=>{
+    if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;e.preventDefault();
+    const n=all[(i+(e.key==="ArrowRight"?1:all.length-1))%all.length];n.focus();n.click()});
+});
+
+// tabs
+function showTab(is3d){$("pane3d").hidden=!is3d;$("pane2d").hidden=is3d;$("tab3d").classList.toggle("on",is3d);$("tab2d").classList.toggle("on",!is3d);
+  $("tab3d").setAttribute("aria-selected",is3d);$("tab2d").setAttribute("aria-selected",!is3d);if(T)T.dirty=true}
+$("tab3d").addEventListener("click",()=>showTab(true));
+$("tab2d").addEventListener("click",()=>showTab(false));
+
+document.getElementById("f").addEventListener("input",compute);
+document.getElementById("f").addEventListener("change",compute);
+document.getElementById("f").addEventListener("submit",e=>e.preventDefault());
+$("dcda").addEventListener("input",compute);
+$("copy").addEventListener("click",()=>{
+  const txt=$("copyText").value, btn=$("copy");
+  const done=()=>{btn.textContent="Copied";setTimeout(()=>btn.textContent="Copy setup sheet",1600)};
+  const fallback=()=>{const ta=$("copyText");ta.style.position="static";ta.select();try{document.execCommand("copy");done()}catch(e){btn.textContent="Select and copy manually"}ta.style.position="absolute"};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,fallback)}else fallback();
+});
+if(window.matchMedia) matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",compute);
+compute();
+})();
+</script>
+
+</body>
+</html>
