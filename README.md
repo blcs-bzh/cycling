@@ -4,16 +4,29 @@ A single-page bike-fit tool. Enter your body measurements and bike details, and 
 
 Open `index.html` in a browser, or enable GitHub Pages on this repo to host it.
 
+## How it works
+
+A short welcome pop-up asks who you are (cyclist, physician, physio, other) and how long you've been in the cycling industry. Answers are saved only in the visitor's browser. Then three steps, one block per action:
+
+1. **You**: take or upload a standing photo to measure your inseam, or type height, inseam, weight, flexibility, knee history and FTP.
+2. **Bike**: take or upload a side photo of the bike to measure its current saddle height and seat angle, or type the bike details.
+3. **Goal**: peak power, balanced or economy, plus race speed and CdA.
+
+★ **Your fit**: the results page.
+
+A floating bar at the bottom holds Back / Next and shows the live saddle height.
+
 ## Features
 
 - **Saddle setup sheet**: saddle height, knee bend target (25–35° at the bottom of the stroke), crank length, effective seat angle, setback and torso angle for your speed. Each line is labelled with the strength of its evidence.
 - **3D rider and bike model** (three.js), rotatable, rebuilt live from your numbers. A 2D angles view is also included.
 - **Aero watts calculator**: watts saved and 40 km time saved for a given CdA reduction.
 - **Measure from a photo**:
-  - *Standing*: tap head, book top and floor to estimate inseam from your height.
-  - *On the bike*: tap hip, knee and ankle (and optionally shoulder) to check knee bend and torso angle against your target, with a suggested saddle adjustment in mm.
+  - *Standing (step 1)*: tap head, book top and floor to estimate inseam from your height.
+  - *Bike side view (step 2)*: tap the rear tyre's ground contact and top, the bottom bracket and the saddle top. The rear wheel diameter (default 670 mm, adjustable) sets the scale.
+  - *Knee check (results page)*: tap hip, knee and ankle (and optionally shoulder) on a photo of you on the bike to check knee bend and torso angle, with a suggested saddle adjustment in mm.
   - Photos are processed in the browser and never uploaded.
-- **Jersey colour themes**: Jaune, Rosa and Rojo, inspired by the leader's jerseys of cycling's three Grand Tours. Light and dark mode.
+- **Design**: off-white and ink with an electric lime accent, Bricolage Grotesque headings, Figtree body text. Light and dark mode.
 
 ## Evidence base
 
@@ -26,6 +39,4 @@ Open `index.html` in a browser, or enable GitHub Pages on this repo to host it.
 
 ## Limitations
 
-The results are research-informed starting points, not a professional bike fit. The saddle-height formula (0.883 × inseam), the mm-per-degree conversion and the torso-angle bands between 30 and 46 km/h are approximations. Verify your knee angle on video and test speed at equal power. Photo measurements can be off by a centimetre or more.
-
-The colour themes are inspired by the Grand Tour leader's jerseys. This project is not affiliated with or endorsed by the races' organisers.
+The results are research-informed starting points, not a professional bike fit. The saddle-height formula (0.883 × inseam), the mm-per-degree conversion and the torso-angle bands between 30 and 46 km/h are approximations. Verify your knee angle on video and test speed at equal power. Photo measurements can be off by a centimetre or more; the bike-photo measurement depends on the wheel diameter you enter and on the photo being square to the bike.

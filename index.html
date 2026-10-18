@@ -3,268 +3,397 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<style>
-:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-body{margin:0;font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
-img{max-width:100%}
-[hidden]{display:none!important}
-</style>
-</head>
-<body>
-<title>Saddle Watts Configurator</title>
+<title>Saddle Watts</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,700;1,800&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: race-day fit studio — asphalt neutrals, one leader's jersey colour at a time (Jaune / Rosa / Rojo) as the fill accent, race-bib numerals for the key result */
+/* Saddle Watts v2 — step-by-step flow. Off-white + ink, one electric lime accent. */
 :root{
-  /* fixed jersey swatches, same in both themes */
-  --y:#FFD200; --p:#F28CB8; --r:#D6121C;
-  /* asphalt neutrals */
-  --bg:#F1F2F0; --panel:#FFFFFF; --ink:#15171B; --muted:#5C6068; --line:#D9DBDD; --soft:#E7E8E6;
-  /* active jersey (default: Jaune) — --jersey is a fill, --accent is text-safe */
-  --jersey:#FFD200; --on-jersey:#15171B; --accent:#876300; --accent-soft:#FFF3BF; --accent-ink:var(--on-jersey);
+  --bg:#F4F3EE; --panel:#FFFFFF; --ink:#121411; --muted:#5D6259; --line:#E1E0D8; --soft:#EEEDE6;
+  --jersey:#C8F031; --on-jersey:#121411; --accent:#3D6600; --accent-soft:#EEF8CF;
   --good:#1E7F4F; --warn:#9A6412; --risk:#B3261E; --pre:#6B4FB8;
-  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
-  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --dock:#121411; --on-dock:#F4F3EE;
+  --display:"Bricolage Grotesque","Arial Rounded MT Bold",system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r-lg:26px; --r-md:18px; --r-sm:14px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  color-scheme:light;
 }
-:root[data-tour="rosa"]{--jersey:#F28CB8; --on-jersey:#2A0B19; --accent:#B0215F; --accent-soft:#FCE4EF}
-:root[data-tour="rojo"]{--jersey:#D6121C; --on-jersey:#FFFFFF; --accent:#C0121B; --accent-soft:#FBE2E3}
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#111215; --panel:#1A1C20; --ink:#ECEDEF; --muted:#9A9EA6; --line:#2C2F35; --soft:#22252A;
-    --accent:#FFD43B; --accent-soft:#3A3212;
-    --good:#5FC892; --warn:#E3B062; --risk:#F08A80; --pre:#B9A2F2; color-scheme:dark}
-  :root:not([data-theme="light"])[data-tour="rosa"]{--accent:#F7A3C8; --accent-soft:#3B1E2C}
-  :root:not([data-theme="light"])[data-tour="rojo"]{--jersey:#E1232D; --accent:#FF7A7F; --accent-soft:#401A1C}
+    --bg:#0E100D; --panel:#171A15; --ink:#EEF1E8; --muted:#A3A99C; --line:#2A2E26; --soft:#1F231C;
+    --accent:#C8F031; --accent-soft:#263010;
+    --good:#5FC892; --warn:#E3B062; --risk:#F08A80; --pre:#B9A2F2;
+    --dock:#242920; --on-dock:#EEF1E8; color-scheme:dark}
 }
 :root[data-theme="dark"]{
-  --bg:#111215; --panel:#1A1C20; --ink:#ECEDEF; --muted:#9A9EA6; --line:#2C2F35; --soft:#22252A;
-  --accent:#FFD43B; --accent-soft:#3A3212;
-  --good:#5FC892; --warn:#E3B062; --risk:#F08A80; --pre:#B9A2F2; color-scheme:dark}
-:root[data-theme="dark"][data-tour="rosa"]{--accent:#F7A3C8; --accent-soft:#3B1E2C}
-:root[data-theme="dark"][data-tour="rojo"]{--jersey:#E1232D; --accent:#FF7A7F; --accent-soft:#401A1C}
+  --bg:#0E100D; --panel:#171A15; --ink:#EEF1E8; --muted:#A3A99C; --line:#2A2E26; --soft:#1F231C;
+  --accent:#C8F031; --accent-soft:#263010;
+  --good:#5FC892; --warn:#E3B062; --risk:#F08A80; --pre:#B9A2F2;
+  --dock:#242920; --on-dock:#EEF1E8; color-scheme:dark}
+
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15.5px;line-height:1.5}
-.wrap{max-width:1180px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px 36px;align-items:end;padding-bottom:20px}
-@media (max-width:780px){.hero{grid-template-columns:1fr}}
-.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
-h1{font-family:var(--display);font-weight:800;font-style:italic;font-size:clamp(2.7rem,7.5vw,4.8rem);line-height:.88;letter-spacing:-.005em;margin:0;text-transform:uppercase;text-wrap:balance}
-h1 span{display:inline-block;background:var(--jersey);color:var(--on-jersey);padding:.02em .16em .04em .1em;transform:skewX(-6deg)}
-.lede{max-width:56ch;color:var(--muted);margin:14px 0 0;font-size:16.5px}
-.evid{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin:12px 0 0}
-.tours{display:grid;gap:4px;min-width:0}
-.tour-row{display:flex;gap:8px;flex-wrap:wrap}
-.tour{display:grid;justify-items:center;gap:2px;min-width:86px;padding:10px 12px 9px;font:inherit;color:var(--ink);background:var(--panel);border:1.5px solid var(--line);border-radius:6px;cursor:pointer}
-.tour svg{width:42px;height:42px;display:block}
-.tour svg path{stroke:var(--ink);stroke-width:1.4;stroke-linejoin:round}
-.tour b{font-family:var(--display);font-style:italic;font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:.03em;line-height:1}
-.tour small{font-size:11px;color:var(--muted)}
-.tour[aria-checked="true"]{border-color:var(--ink);box-shadow:inset 0 -4px 0 var(--jersey)}
-@media (prefers-reduced-motion:no-preference){.tour{transition:transform .15s,border-color .15s}.tour:hover{transform:translateY(-2px)}}
-.tricolor{display:flex;height:6px;margin-bottom:26px;border-radius:1px;overflow:hidden}
-.tricolor i{flex:1}
-.tricolor i:nth-child(1){background:var(--y)} .tricolor i:nth-child(2){background:var(--p)} .tricolor i:nth-child(3){background:var(--r)}
-.grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:24px;align-items:start}
-@media (max-width:900px){.grid{grid-template-columns:1fr}}
-form{display:grid;gap:16px}
-fieldset{border:1px solid var(--line);background:var(--panel);border-radius:6px;margin:0;padding:14px 16px 16px;display:grid;gap:12px;min-width:0}
-legend{display:flex;align-items:center;gap:8px;font-family:var(--display);font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.05em;font-size:17px;padding:0 6px;color:var(--ink)}
-legend::before{content:"";width:16px;height:10px;background:var(--jersey);transform:skewX(-14deg);border:1px solid var(--line)}
+[hidden]{display:none!important}
+html{padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  background:radial-gradient(circle at 1px 1px,var(--line) 1px,transparent 1.4px) 0 0/22px 22px,var(--bg)}
+img{max-width:100%}
+.wrap{max-width:1080px;margin:0 auto;padding-block:20px calc(110px + env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* top bar */
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:28px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.02em}
+.mark{width:36px;height:36px;border-radius:11px;background:var(--jersey);display:grid;place-items:center;border:1.5px solid var(--ink)}
+.mark svg{width:22px;height:22px}
+.brand em{font-style:normal;color:var(--muted);font-weight:600}
+.pill-note{font-size:13px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:6px 12px;border-radius:999px}
+
+/* hero */
+.hero{margin-bottom:24px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(2.3rem,6.4vw,4rem);line-height:.98;letter-spacing:-.035em;margin:0;text-wrap:balance;max-width:16ch}
+h1 mark{background:linear-gradient(transparent 58%,var(--jersey) 58%,var(--jersey) 92%,transparent 92%);color:inherit;padding:0 .06em}
+.lede{color:var(--muted);font-size:17px;max-width:52ch;margin:14px 0 0}
+
+/* stepper */
+.stepper{--prog:0;position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;list-style:none;margin:0 0 18px;padding:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px}
+.stepper li{min-width:0}
+.stepper button{width:100%;min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 10px;border:0;border-radius:999px;background:transparent;color:var(--muted);font:600 14.5px/1.1 var(--body);cursor:pointer}
+.stepper .n{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:600 13px var(--mono);background:var(--soft);color:var(--ink)}
+.stepper button.done .n{background:var(--ink);color:var(--bg)}
+.stepper button.done .n::after{content:"✓"} .stepper button.done .n i{display:none}
+.stepper button[aria-current="step"]{background:var(--jersey);color:var(--on-jersey)}
+.stepper button[aria-current="step"] .n{background:var(--on-jersey);color:var(--jersey)}
+.stepper button:hover:not([aria-current]){color:var(--ink);background:var(--soft)}
+@media (max-width:640px){
+  .stepper button .lbl{display:none}
+  .stepper button[aria-current="step"] .lbl{display:inline}
+  .stepper{grid-template-columns:repeat(4,auto);justify-content:space-between}
+  .stepper button{padding:6px 8px}
+}
+
+/* step shell */
+.step{display:grid;gap:14px}
+@media (prefers-reduced-motion:no-preference){.step:not([hidden]){animation:rise .32s var(--ease)}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.stephead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px 24px;flex-wrap:wrap;padding:6px 4px 4px}
+.stephead h2{font-family:var(--display);font-weight:800;font-size:clamp(1.7rem,4vw,2.3rem);letter-spacing:-.03em;line-height:1.05;margin:0;outline:none}
+.stephead p{margin:6px 0 0;color:var(--muted);max-width:56ch}
+.kicker{display:inline-block;font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.sample{font-size:13.5px;font-weight:500;background:var(--accent-soft);color:var(--ink);border-radius:999px;padding:8px 14px;margin:0}
+
+/* blocks */
+.blocks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:760px){.blocks{grid-template-columns:1fr}}
+.block{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:20px;display:grid;gap:14px;align-content:start;min-width:0}
+.block.wide{grid-column:1/-1}
+.bh{display:flex;align-items:center;gap:12px}
+.ico{flex:none;width:40px;height:40px;border-radius:13px;background:var(--soft);display:grid;place-items:center;font-size:19px}
+.bh h3{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.015em;margin:0;line-height:1.15}
+.bh p{margin:2px 0 0;font-size:13.5px;color:var(--muted)}
+.tag{margin-left:auto;font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:3px 9px;white-space:nowrap}
+
+/* fields */
 .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .row.three{grid-template-columns:repeat(3,minmax(0,1fr))}
-@media (max-width:460px){.row,.row.three{grid-template-columns:1fr 1fr}}
-label{display:grid;gap:4px;font-size:13px;font-weight:500;min-width:0}
-label small{font-weight:400;color:var(--muted);font-size:12px}
-input,select{font:inherit;font-family:var(--mono);font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:7px 9px;width:100%;min-width:0}
-input:focus-visible,select:focus-visible,button:focus-visible,.seg input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
-.seg{display:flex;flex-wrap:wrap;gap:6px}
-.seg label{display:block}
-.seg input{position:absolute;opacity:0;width:1px;height:1px}
-.seg span{display:inline-block;padding:6px 11px;border:1px solid var(--line);border-radius:999px;font-size:13px;cursor:pointer;background:var(--bg)}
-.seg input:checked+span{background:var(--jersey);border-color:var(--ink);color:var(--on-jersey);font-weight:600}
-.hint{font-size:12px;color:var(--muted);margin:0}
-.sample{font-family:var(--mono);font-size:12px;background:var(--accent-soft);color:var(--ink);border-radius:4px;padding:8px 10px;margin:0}
-/* photo measurement */
-.pguide{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:14px;align-items:start}
-@media (max-width:480px){.pguide{grid-template-columns:1fr}.pguide svg{max-width:240px}}
+@media (max-width:520px){.row.three{grid-template-columns:1fr 1fr}}
+label{display:grid;gap:6px;font-size:14px;font-weight:600;min-width:0;align-content:start}
+label small{font-weight:400;color:var(--muted);font-size:12.5px}
+input,select{font:500 16px var(--mono);color:var(--ink);background:var(--soft);border:1.5px solid transparent;border-radius:var(--r-sm);padding:0 14px;height:50px;width:100%;min-width:0;transition:border-color .15s,background .15s}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 20px) 22px,calc(100% - 15px) 22px;background-size:5px 5px;background-repeat:no-repeat;font-family:var(--body);font-weight:600;padding-right:36px}
+input:hover,select:hover{border-color:var(--line)}
+input:focus-visible,select:focus-visible{outline:none;border-color:var(--ink);background:var(--panel);box-shadow:0 0 0 4px color-mix(in srgb,var(--jersey) 70%,transparent)}
+button:focus-visible,.choice input:focus-visible+span,.filebtn:focus-within{outline:3px solid var(--ink);outline-offset:2px;box-shadow:0 0 0 6px var(--jersey)}
+.hint{font-size:13px;color:var(--muted);margin:0}
+
+/* choices */
+fieldset.choice{border:0;margin:0;padding:0;min-width:0;display:grid;gap:8px}
+fieldset.choice legend{padding:0;font-size:14px;font-weight:600;margin-bottom:8px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.choice label{display:block;position:relative}
+.choice input{position:absolute;opacity:0;width:1px;height:1px}
+.choice span{display:grid;gap:2px;min-height:50px;align-content:center;padding:10px 14px;border:1.5px solid var(--line);border-radius:var(--r-sm);font-size:14.5px;font-weight:600;cursor:pointer;background:var(--panel);transition:border-color .15s,background .15s,transform .15s var(--ease)}
+.choice span small{font-weight:400;font-size:12.5px;color:var(--muted)}
+.choice span:hover{border-color:var(--ink)}
+.choice input:checked+span{background:var(--jersey);border-color:var(--ink);color:var(--on-jersey)}
+.choice input:checked+span small{color:color-mix(in srgb,var(--on-jersey) 72%,transparent)}
+.choice .em{font-style:normal;font-size:22px;line-height:1;margin-bottom:4px}
+@media (prefers-reduced-motion:no-preference){.choice span:active{transform:scale(.98)}}
+
+/* photo tool */
+.tabs{display:inline-flex;gap:4px;padding:4px;background:var(--soft);border-radius:999px;flex-wrap:wrap}
+.tab{font:600 13.5px var(--body);min-height:40px;padding:0 16px;background:transparent;color:var(--muted);border:0;border-radius:999px;cursor:pointer}
+.tab.on{background:var(--panel);color:var(--ink);box-shadow:0 0 0 1.5px var(--ink)}
+.pguide{display:grid;grid-template-columns:minmax(0,200px) minmax(0,1fr);gap:18px;align-items:start;background:var(--soft);border-radius:var(--r-md);padding:16px}
+@media (max-width:520px){.pguide{grid-template-columns:1fr}.pguide svg{max-width:240px}}
 .pguide svg{width:100%;height:auto;display:block}
 .g-frame{fill:none;stroke:var(--muted);stroke-dasharray:4 4;stroke-width:1}
 .g-floor{stroke:var(--muted);stroke-width:1.5}
 .g-body{fill:var(--line);stroke:var(--muted);stroke-width:1.2}
 .g-limb{fill:none;stroke:var(--muted);stroke-width:7;stroke-linecap:round;stroke-linejoin:round}
-.g-book{fill:var(--accent)}
+.g-book{fill:var(--ink)}
 .g-lead{fill:none;stroke:var(--muted);stroke-dasharray:2 3;stroke-width:1}
-.g-mark circle{fill:var(--jersey);stroke:var(--ink);stroke-width:1.2}
-.g-mark text{font-family:var(--mono);font-size:9.5px;font-weight:500;fill:var(--on-jersey);text-anchor:middle;dominant-baseline:central}
+.g-mark circle{fill:var(--jersey);stroke:#121411;stroke-width:1.2}
+.g-mark text{font-family:var(--mono);font-size:9.5px;font-weight:500;fill:#121411;text-anchor:middle;dominant-baseline:central}
 .g-lbl{font-family:var(--mono);font-size:10px;fill:var(--ink)}
 .g-phone{fill:var(--panel);stroke:var(--ink);stroke-width:1.5}
 .g-wheel{fill:none;stroke:var(--muted);stroke-width:3}
 .g-bike{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
 .g-saddle{stroke:var(--ink);stroke-width:4;stroke-linecap:round}
-.tips{margin:0;padding-left:18px;font-size:13.5px;display:grid;gap:5px}
-.pbtns{display:flex;flex-wrap:wrap;gap:8px}
-.filebtn{position:relative;display:inline-flex;align-items:center;font-size:13px;font-weight:600;padding:8px 14px;border-radius:4px;border:1px solid var(--ink);background:var(--jersey);color:var(--on-jersey);cursor:pointer}
-.filebtn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.tips{margin:0;padding-left:20px;font-size:14px;display:grid;gap:6px}
+.pbtns{display:flex;flex-wrap:wrap;gap:10px}
+.filebtn{position:relative;display:inline-flex;align-items:center;gap:8px;min-height:48px;font-size:15px;font-weight:700;padding:0 20px;border-radius:999px;border:1.5px solid var(--ink);background:var(--jersey);color:var(--on-jersey);cursor:pointer}
+.filebtn.ghost{background:var(--panel);color:var(--ink);border-color:var(--line)}
+.filebtn.ghost:hover{border-color:var(--ink)}
 .filebtn input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
-.filebtn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
-.pstage{display:grid;gap:8px;justify-items:center;min-width:0}
-#pcan{touch-action:none;border-radius:4px;max-width:100%;cursor:crosshair;background:var(--soft)}
-.pprompt{justify-self:stretch;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0;font-weight:600;font-size:14px}
-.pprompt .num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--jersey);color:var(--on-jersey);border:1px solid var(--ink);font-family:var(--mono);font-size:12px}
+.pstage{display:grid;gap:10px;justify-items:center;min-width:0}
+#pcan{touch-action:none;border-radius:var(--r-sm);max-width:100%;cursor:crosshair;background:var(--soft)}
+.pprompt{justify-self:stretch;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0;font-weight:700;font-size:15px}
+.pprompt .num{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--jersey);color:var(--on-jersey);border:1.5px solid var(--ink);font-family:var(--mono);font-size:13px}
 .pprompt small{font-weight:400;color:var(--muted)}
 .presult{display:grid;gap:8px}
 .presult:empty{display:none}
-.pres{background:var(--soft);border-radius:4px;padding:12px;display:grid;gap:6px;min-width:0}
-.pres .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-.pres b{font-family:var(--display);font-style:italic;font-weight:800;font-size:30px;line-height:1}
-.pres p{margin:0;font-size:13px}
-.chip{justify-self:start;display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;border:1px solid currentColor}
+.pres{background:var(--accent-soft);border-radius:var(--r-md);padding:16px;display:grid;gap:6px;min-width:0}
+.pres .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.pres b{font-family:var(--display);font-weight:800;font-size:36px;line-height:1;letter-spacing:-.03em}
+.pres p{margin:0;font-size:14px}
+.chip{justify-self:start;display:inline-block;font-size:12.5px;font-weight:700;padding:3px 11px;border-radius:999px;border:1.5px solid currentColor}
 .chip.ok{color:var(--good)} .chip.adj{color:var(--warn)}
+.privacy{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted);margin:0}
+
+/* buttons */
+button{font:inherit;font-size:14.5px;font-weight:700;border-radius:999px;min-height:44px;padding:0 18px;cursor:pointer;border:1.5px solid var(--ink);background:var(--jersey);color:var(--on-jersey)}
+button.ghost{background:var(--panel);color:var(--ink);border-color:var(--line)}
+button.ghost:hover{border-color:var(--ink)}
+button.sm{min-height:38px;padding:0 14px;font-size:13px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.skip{background:transparent;border:0;color:var(--muted);text-decoration:underline;text-underline-offset:3px;padding:0 4px;min-height:44px}
+.skip:hover{color:var(--ink)}
+
 /* results */
-.results{display:grid;gap:16px;min-width:0}
-@media (min-width:901px){.results{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
-.card h2{font-family:var(--display);font-weight:700;font-style:italic;text-transform:uppercase;letter-spacing:.04em;font-size:21px;margin:0 0 10px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
-.card h2 small{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:0;text-transform:none;color:var(--muted)}
+.res{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:14px;align-items:start}
+@media (max-width:860px){.res{grid-template-columns:1fr}}
+.col{display:grid;gap:14px;min-width:0}
+.big{background:var(--jersey);color:var(--on-jersey);border:1.5px solid #121411;border-radius:var(--r-lg);padding:22px;display:grid;gap:4px;position:relative;overflow:hidden}
+.big .k{font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.big .num{font-family:var(--display);font-weight:800;font-size:clamp(4rem,12vw,5.6rem);line-height:.9;letter-spacing:-.05em;display:flex;align-items:baseline;gap:8px}
+.big .num small{font-size:.32em;letter-spacing:-.01em;font-weight:700}
+.big .d{font-weight:600;font-size:14.5px}
+.big svg{position:absolute;right:-18px;bottom:-24px;width:150px;opacity:.16}
+.minis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mini{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;display:grid;gap:2px}
+.mini span{font-size:12.5px;color:var(--muted);font-weight:600}
+.mini b{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:-.03em;line-height:1.1}
+.mini.ink{background:var(--dock);color:var(--on-dock);border-color:var(--dock)} .mini.ink span{color:color-mix(in srgb,var(--on-dock) 70%,transparent)}
+.mini.ink b{color:var(--jersey)}
 .diagram svg{width:100%;height:auto;display:block}
-.tabs{display:inline-flex;gap:4px}
-.tab{font-family:var(--mono);font-size:12px;font-weight:500;padding:4px 12px;background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:999px;letter-spacing:0;text-transform:none}
-.tab.on{background:var(--jersey);color:var(--on-jersey);border-color:var(--ink)}
-.v3d{position:relative;width:100%;aspect-ratio:3/2;max-width:100%;border-radius:4px;overflow:hidden;background:linear-gradient(180deg,var(--soft) 55%,var(--accent-soft));cursor:grab;touch-action:none}
+.v3d{position:relative;width:100%;aspect-ratio:3/2;border-radius:var(--r-md);overflow:hidden;background:linear-gradient(180deg,var(--soft) 55%,var(--accent-soft));cursor:grab;touch-action:none}
 .v3d:active{cursor:grabbing}
 .v3d canvas{display:block;width:100%!important;height:100%!important}
-.v3dbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin:10px 0 6px}
-.v3dinfo{font-family:var(--mono);font-size:12px;color:var(--ink)}
-button.sm{padding:4px 10px;font-size:12px}
-.sheet{display:grid;gap:0}
-.item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:11px 0;border-top:1px solid var(--line)}
-.item:first-of-type{border-top:0;padding-top:2px}
-.item .k{font-weight:600;font-size:14px}
+.v3dbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.v3dinfo{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.sheet{display:grid}
+.item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:14px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0;padding-top:0}
+.item .k{font-weight:700;font-size:15px}
 .item .v{font-family:var(--mono);font-weight:500;font-size:17px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-.item .why{grid-column:1/-1;font-size:13px;color:var(--muted);margin:0}
+.item .why{grid-column:1/-1;font-size:13.5px;color:var(--muted);margin:0}
 .item .delta{font-size:12px;font-family:var(--mono)}
 .up{color:var(--warn)} .ok{color:var(--good)}
-.badge{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px;border-radius:3px;border:1px solid currentColor;margin-left:6px;vertical-align:2px;white-space:nowrap}
+.badge{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid currentColor;margin-left:8px;vertical-align:2px;white-space:nowrap}
 .b-strong{color:var(--good)} .b-mod{color:var(--warn)} .b-weak{color:var(--muted)} .b-pre{color:var(--pre)} .b-phys{color:var(--accent)}
-.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
-@media (max-width:460px){.stats{grid-template-columns:1fr 1fr}}
-.stat{background:var(--soft);border-radius:4px;padding:10px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:460px){.stats{grid-template-columns:1fr}}
+.stat{background:var(--soft);border-radius:var(--r-sm);padding:12px 14px}
 .stat b{display:block;font-family:var(--mono);font-size:20px;font-weight:500;font-variant-numeric:tabular-nums}
-.stat span{font-size:12px;color:var(--muted)}
-/* the race bib: key result in bib numerals */
-.stat.hl{background:var(--panel);border:2px solid var(--ink);position:relative;text-align:center;padding-top:12px}
-.stat.hl::before,.stat.hl::after{content:"";position:absolute;top:6px;width:6px;height:6px;border-radius:50%;background:var(--line);border:1px solid var(--muted)}
-.stat.hl::before{left:6px} .stat.hl::after{right:6px}
-.stat.hl b{color:var(--ink);font-family:var(--display);font-weight:800;font-style:italic;font-size:32px;line-height:1}
-.slider{display:grid;gap:4px;margin:4px 0 8px}
-input[type=range]{padding:0;accent-color:var(--accent);background:transparent;border:0}
-.btns{display:flex;gap:8px;flex-wrap:wrap}
-button{font:inherit;font-size:13px;font-weight:600;border-radius:4px;padding:8px 14px;cursor:pointer;border:1px solid var(--ink);background:var(--jersey);color:var(--on-jersey)}
-button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-button.ghost:hover{border-color:var(--ink)}
+.stat span{font-size:12.5px;color:var(--muted)}
+.stat.hl{background:var(--jersey);color:var(--on-jersey)}
+.stat.hl b{font-family:var(--display);font-weight:800;font-size:28px;letter-spacing:-.03em;line-height:1.1}
+.stat.hl span{color:color-mix(in srgb,var(--on-jersey) 72%,transparent)}
+.slider{display:grid;gap:8px}
+input[type=range]{height:28px;padding:0;accent-color:var(--ink);background:transparent;border:0}
+input[type=range]:focus-visible{box-shadow:none;outline:3px solid var(--jersey);outline-offset:2px}
 textarea{position:absolute;left:-9999px}
-.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14px}
-.warnbox{border-left:3px solid var(--warn);background:var(--soft);padding:10px 12px;font-size:13px;border-radius:0 4px 4px 0;margin:0}
-.refs{font-size:12.5px;color:var(--muted);display:grid;gap:4px;margin:0;padding-left:18px}
-.refs a{color:var(--accent)}
-footer{margin-top:28px;font-size:12px;color:var(--muted);max-width:75ch}
-@media (prefers-reduced-motion:no-preference){.v,.stat b{transition:color .2s}}
+.steps{margin:0;padding:0;list-style:none;display:grid;gap:8px;counter-reset:s}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;gap:12px;align-items:start;font-size:14.5px}
+.steps li::before{content:counter(s);width:30px;height:30px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font:600 13px var(--mono)}
+.warnbox{background:var(--accent-soft);padding:12px 14px;font-size:14px;border-radius:var(--r-sm);margin:0}
+.refs{font-size:13px;color:var(--muted);display:grid;gap:6px;margin:0;padding-left:18px}
+.refs a{color:var(--accent);font-weight:600}
+details.block>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px}
+details.block>summary::-webkit-details-marker{display:none}
+details.block>summary::after{content:"+";margin-left:auto;font:600 22px var(--mono);color:var(--muted)}
+details.block[open]>summary::after{content:"−"}
+.diagram .bh{flex-wrap:wrap}.diagram .tabs{flex-wrap:nowrap}
+
+/* photo CTA */
+.photo{display:grid;gap:14px;min-width:0}
+.cta{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px;align-items:center;background:var(--jersey);color:#121411;border:1.5px solid #121411;border-radius:var(--r-lg);padding:24px;position:relative;overflow:hidden}
+@media (max-width:700px){.cta{grid-template-columns:1fr;padding:20px}.cta-art{order:-1}}
+.cta-txt{display:grid;gap:10px;min-width:0;align-content:start}
+.cta-kick{justify-self:start;font:500 11.5px var(--mono);letter-spacing:.07em;text-transform:uppercase;background:#121411;color:var(--jersey);border-radius:999px;padding:4px 10px}
+.cta h3{font-family:var(--display);font-weight:800;font-size:clamp(1.6rem,3.6vw,2.2rem);letter-spacing:-.035em;line-height:1.02;margin:0}
+.cta p{margin:0;font-size:15px}
+.cta .pbtns{margin-top:6px}
+.cta .filebtn{min-height:56px;padding:0 24px;font-size:16px;border:2px solid #121411;background:#FFFFFF;color:#121411;gap:10px;transition:transform .15s var(--ease)}
+.cta .filebtn.primary{background:#121411;color:var(--jersey)}
+.cta .filebtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media (prefers-reduced-motion:no-preference){.cta .filebtn:hover{transform:translateY(-2px)}.cta .filebtn:active{transform:scale(.98)}}
+@media (max-width:460px){.cta .pbtns{display:grid}.cta .filebtn{justify-content:center}}
+.cta .filebtn:focus-within{outline:3px solid #121411;outline-offset:3px;box-shadow:none}
+.cta .privacy{color:#121411;opacity:.8}
+.cta-art{background:#FFFFFF;border-radius:var(--r-md);padding:14px;border:1.5px solid #121411;display:grid;place-items:center}
+.cta-art svg{width:100%;max-width:300px;height:auto;display:block;--muted:#5D6259;--line:#E1E0D8;--ink:#121411;--panel:#FFFFFF}
+.photo.has .cta-art{display:none}
+.photo.has .cta{grid-template-columns:1fr}
+.wheel{color:#121411;max-width:360px}
+.wheel small{color:#121411;opacity:.75}
+.wheel input{background:#FFFFFF;border-color:#121411}
+.howto{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);padding:4px 18px}
+.howto summary,.knee summary{cursor:pointer;font-weight:700;min-height:48px;display:flex;align-items:center;gap:8px}
+.howto[open]{padding-bottom:16px}
+.photo .pstage{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px}
+.knee{border-top:1px solid var(--line);padding-top:6px}
+.knee[open] summary{margin-bottom:10px}
+.or{display:flex;align-items:center;gap:12px;color:var(--muted);font:500 12px var(--mono);letter-spacing:.07em;text-transform:uppercase;margin:4px 0}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+/* welcome gate */
+dialog.gate{border:0;padding:0;background:transparent;color:var(--ink);width:min(560px,calc(100% - 24px));max-width:none;max-height:none}
+dialog.gate::backdrop{background:rgba(18,20,17,.6)}
+.gate-card{background:var(--panel);border:1.5px solid var(--ink);border-radius:var(--r-lg);padding:24px;display:grid;gap:20px;max-height:calc(100dvh - 24px);overflow:auto}
+@media (prefers-reduced-motion:no-preference){dialog.gate[open] .gate-card{animation:rise .35s var(--ease)}}
+.gate-head{display:grid;gap:8px}
+.gate-head .mark{width:44px;height:44px;border-radius:14px}
+.gate-head .mark svg{width:26px;height:26px}
+.gate-head h2{font-family:var(--display);font-weight:800;font-size:clamp(1.7rem,5vw,2.2rem);letter-spacing:-.035em;line-height:1.02;margin:4px 0 0}
+.gate-head p{margin:0;color:var(--muted)}
+.gate .q legend{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:-.015em;margin-bottom:10px;padding:0}
+.gate .opts{grid-template-columns:repeat(2,minmax(0,1fr))}
+.gate .opts.yrs{grid-template-columns:repeat(auto-fit,minmax(118px,1fr))}
+.gate .choice span{min-height:54px}
+.gate .choice span .em{font-style:normal;font-size:20px;line-height:1}
+.gate #gOtherWrap{display:grid;gap:6px}
+.gate #gOtherWrap[hidden]{display:none}
+.gate #gOther{position:static;opacity:1;width:100%;height:50px}
+.gate .go{width:100%;min-height:56px;font-size:16px;display:flex;justify-content:center;align-items:center;gap:8px}
+.gate .go:disabled{opacity:.4;cursor:not-allowed}
+.gate .privacy{justify-content:center;text-align:center}
+footer{margin-top:28px;font-size:12.5px;color:var(--muted);max-width:75ch}
+
+/* bottom dock */
+.dock{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:10;width:min(680px,calc(100% - 24px));display:flex;align-items:center;gap:10px;padding:8px;background:var(--dock);color:var(--on-dock);border-radius:999px;border:1px solid color-mix(in srgb,var(--on-dock) 14%,transparent)}
+.dock .mid{flex:1;min-width:0;display:grid;line-height:1.2;padding:0 6px;text-align:center}
+.dock .mid small{font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;opacity:.7}
+.dock .mid span{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dock .mid b{color:var(--jersey);font-family:var(--display);font-weight:800;font-size:16px}
+.dock button{min-height:48px;padding:0 20px;display:inline-flex;align-items:center;gap:6px;border-color:var(--jersey)}
+.dock button.back{background:transparent;color:var(--on-dock);border-color:color-mix(in srgb,var(--on-dock) 25%,transparent)}
+.dock button:disabled{opacity:.35;cursor:default}
+@media (max-width:420px){.dock button{padding:0 14px}.dock .back span:last-child{display:none}}
+#photoBox .tabs{display:grid;grid-template-columns:1fr 1fr;border-radius:var(--r-sm)}
+#photoBox .tab{border-radius:10px;line-height:1.2;padding:6px 10px}
 </style>
-
+</head>
+<body>
 <div class="wrap">
+<div class="top">
+  <div class="brand"><span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#121411" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8c4-1 11-1.5 18 .5-2 2.5-6 3.5-9 3.5"/><path d="M12 12v8"/><path d="M8.5 20h7"/></svg></span>saddle<em>/</em>watts</div>
+  <span class="pill-note">Free · research-based · photos stay on your phone</span>
+</div>
+
 <header class="hero">
-  <div>
-    <p class="eyebrow">Bike fit lab · built on published research</p>
-    <h1>Find the <span>watts</span><br>in your saddle</h1>
-    <p class="lede">Enter your body and your bike. In under a minute you get a starting saddle setup, a 3D view of your position, and how many watts a better aero position is worth at your race speed.</p>
-    <p class="evid">Evidence base: Husband 2024 · Fintelman 2014/15 · Faulkner 2024 · Bini 2010/14 · Martin 2001</p>
-  </div>
-  <div class="tours">
-    <p class="eyebrow">Ride in the colours of</p>
-    <div class="tour-row" role="radiogroup" aria-label="Colour theme">
-      <button type="button" class="tour" role="radio" aria-checked="true" data-tour="jaune"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 5l-9 4-5 11 6 3 3-5v25h26V18l3 5 6-3-5-11-9-4c-1 3-4 5-8 5s-7-2-8-5z" style="fill:var(--y)"/></svg><b>Jaune</b><small>Yellow jersey</small></button>
-      <button type="button" class="tour" role="radio" aria-checked="false" data-tour="rosa"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 5l-9 4-5 11 6 3 3-5v25h26V18l3 5 6-3-5-11-9-4c-1 3-4 5-8 5s-7-2-8-5z" style="fill:var(--p)"/></svg><b>Rosa</b><small>Pink jersey</small></button>
-      <button type="button" class="tour" role="radio" aria-checked="false" data-tour="rojo"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 5l-9 4-5 11 6 3 3-5v25h26V18l3 5 6-3-5-11-9-4c-1 3-4 5-8 5s-7-2-8-5z" style="fill:var(--r)"/></svg><b>Rojo</b><small>Red jersey</small></button>
-    </div>
-  </div>
+  <h1>Dial in your saddle. Find <mark>free watts.</mark></h1>
+  <p class="lede">Three quick steps. Snap two photos, answer a few questions. You get a starting saddle setup, a 3D view of your position, and how many watts a better aero position is worth.</p>
 </header>
-<div class="tricolor" aria-hidden="true"><i></i><i></i><i></i></div>
 
-<div class="grid">
+<ol class="stepper" aria-label="Steps">
+  <li><button type="button"><span class="n"><i>1</i></span><span class="lbl">You</span></button></li>
+  <li><button type="button"><span class="n"><i>2</i></span><span class="lbl">Bike</span></button></li>
+  <li><button type="button"><span class="n"><i>3</i></span><span class="lbl">Goal</span></button></li>
+  <li><button type="button"><span class="n"><i>★</i></span><span class="lbl">Your fit</span></button></li>
+</ol>
+
 <form id="f" novalidate>
-  <p class="sample">Pre-filled with an example rider. Replace every value with your own.</p>
 
-  <fieldset id="photoBox">
-    <legend>Measure from a photo</legend>
-    <div class="tabs" role="tablist" aria-label="Photo type">
-      <button type="button" role="tab" id="pmStand" class="tab on" aria-selected="true">Standing · inseam</button>
-      <button type="button" role="tab" id="pmBike" class="tab" aria-selected="false">On the bike · knee check</button>
+<!-- STEP 1 -->
+<section class="step" id="s-you" aria-labelledby="h-you">
+  <div class="stephead">
+    <div><span class="kicker">Step 1 of 3</span><h2 id="h-you" tabindex="-1">Tell us about you</h2><p>Snap a quick photo, or type your numbers in. Takes about 30 seconds.</p></div>
+    <p class="sample">Pre-filled with an example rider. Swap in your own numbers.</p>
+  </div>
+  <div data-photo-slot="stand">
+  <div class="photo" id="photoBox">
+    <div class="cta">
+      <div class="cta-txt">
+        <span class="cta-kick" id="pKick"></span>
+        <h3 id="pTitle"></h3>
+        <p id="pSub"></p>
+        <div class="pbtns">
+          <label class="filebtn primary" for="camIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.6"/></svg><span id="camLbl">Take a photo</span><input id="camIn" type="file" accept="image/*" capture="environment"></label>
+          <label class="filebtn" for="fileIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 15v5h16v-5"/></svg><span id="fileLbl">Upload a photo</span><input id="fileIn" type="file" accept="image/*"></label>
+        </div>
+        <label class="wheel" id="wheelRow" for="wheelD">Wheel + tyre diameter <small>mm · sets the photo scale. 700c road ≈ 670, 700c gravel ≈ 700 (to be verified)</small><input id="wheelD" type="number" inputmode="numeric" step="1" value="670"></label>
+        <p class="privacy">🔒 Stays on your phone. Processed in your browser, never uploaded.</p>
+      </div>
+      <div class="cta-art">
+        <svg id="pg-stand" viewBox="0 0 256 200" role="img" aria-label="How to stand: facing the camera, a book pulled up between the legs, whole body in frame, phone at hip height">
+          <rect x="44" y="4" width="72" height="190" rx="4" class="g-frame"/>
+          <line x1="8" y1="188" x2="214" y2="188" class="g-floor"/>
+          <circle cx="80" cy="26" r="12" class="g-body"/>
+          <rect x="66" y="42" width="28" height="50" rx="9" class="g-body"/>
+          <path d="M68 50 L56 98 M92 50 L104 98" class="g-limb"/>
+          <rect x="68" y="90" width="10" height="96" rx="4" class="g-body"/>
+          <rect x="82" y="90" width="10" height="96" rx="4" class="g-body"/>
+          <rect x="62" y="85" width="36" height="6" rx="1" class="g-book"/>
+          <path d="M86 14 H126 M100 86 H126 M96 188 H126" class="g-lead"/>
+          <g class="g-mark"><circle cx="134" cy="14" r="8"/><text x="134" y="14">1</text></g>
+          <g class="g-mark"><circle cx="134" cy="86" r="8"/><text x="134" y="86">2</text></g>
+          <g class="g-mark"><circle cx="134" cy="186" r="8"/><text x="134" y="186">3</text></g>
+          <text x="147" y="18" class="g-lbl">Top of head</text>
+          <text x="147" y="90" class="g-lbl">Top of book</text>
+          <text x="147" y="174" class="g-lbl">Floor</text>
+          <rect x="226" y="84" width="12" height="20" rx="2" class="g-phone"/>
+          <text x="232" y="118" class="g-lbl" text-anchor="middle">phone</text>
+          <text x="232" y="129" class="g-lbl" text-anchor="middle">hip ht</text>
+        </svg>
+        <svg id="pg-frame" viewBox="0 0 256 200" role="img" aria-label="Side photo of the bike alone: tap where the rear tyre touches the ground, the top of the rear tyre, the bottom bracket, and the top of the saddle">
+          <line x1="6" y1="187" x2="224" y2="187" class="g-floor"/>
+          <circle cx="50" cy="150" r="36" class="g-wheel"/>
+          <circle cx="196" cy="150" r="36" class="g-wheel"/>
+          <path d="M122 158 L104 82 L172 86 L178 106 Z M122 158 L50 150 L104 82 M178 106 L196 150 M172 86 L182 74" class="g-bike"/>
+          <path d="M88 74 H114" class="g-saddle"/>
+          <path d="M122 158 L101 74" class="g-lead" style="stroke:var(--ink);stroke-width:1.4"/>
+          <path d="M50 114 V186" class="g-lead"/>
+          <g class="g-mark"><circle cx="50" cy="186" r="8"/><text x="50" y="186">1</text></g>
+          <g class="g-mark"><circle cx="50" cy="114" r="8"/><text x="50" y="114">2</text></g>
+          <g class="g-mark"><circle cx="122" cy="158" r="8"/><text x="122" y="158">3</text></g>
+          <g class="g-mark"><circle cx="101" cy="72" r="8"/><text x="101" y="72">4</text></g>
+          <rect x="234" y="148" width="12" height="20" rx="2" class="g-phone"/>
+          <text x="240" y="140" class="g-lbl" text-anchor="middle">BB ht</text>
+        </svg>
+        <svg id="pg-bike" viewBox="0 0 256 200" role="img" aria-label="On-bike photo: side view, crank pointing straight down, phone at bottom-bracket height, mark hip, knee, ankle and shoulder">
+          <line x1="6" y1="187" x2="224" y2="187" class="g-floor"/>
+          <circle cx="48" cy="150" r="36" class="g-wheel"/>
+          <circle cx="196" cy="150" r="36" class="g-wheel"/>
+          <path d="M120 158 L102 80 L170 84 L176 104 Z M120 158 L48 150 L102 80 M176 104 L196 150 M170 84 L180 72" class="g-bike"/>
+          <path d="M88 72 H112" class="g-saddle"/>
+          <path d="M120 158 L120 182 M112 182 H130" class="g-bike"/>
+          <path d="M102 64 L134 116 L118 174 M112 180 H132" class="g-limb"/>
+          <path d="M102 64 L152 38 L178 74" class="g-limb"/>
+          <circle cx="166" cy="24" r="10" class="g-body"/>
+          <g class="g-mark"><circle cx="102" cy="64" r="8"/><text x="102" y="64">1</text></g>
+          <g class="g-mark"><circle cx="134" cy="116" r="8"/><text x="134" y="116">2</text></g>
+          <g class="g-mark"><circle cx="118" cy="174" r="8"/><text x="118" y="174">3</text></g>
+          <g class="g-mark"><circle cx="152" cy="38" r="8"/><text x="152" y="38">4</text></g>
+          <rect x="234" y="132" width="12" height="20" rx="2" class="g-phone"/>
+          <text x="240" y="166" class="g-lbl" text-anchor="middle">BB ht</text>
+        </svg>
+      </div>
     </div>
-
-    <div class="pguide" id="pgStand">
-      <svg viewBox="0 0 250 200" role="img" aria-label="How to stand: facing the camera, a book pulled up between the legs, whole body in frame, phone at hip height">
-        <rect x="44" y="4" width="72" height="190" rx="4" class="g-frame"/>
-        <line x1="8" y1="188" x2="214" y2="188" class="g-floor"/>
-        <circle cx="80" cy="26" r="12" class="g-body"/>
-        <rect x="66" y="42" width="28" height="50" rx="9" class="g-body"/>
-        <path d="M68 50 L56 98 M92 50 L104 98" class="g-limb"/>
-        <rect x="68" y="90" width="10" height="96" rx="4" class="g-body"/>
-        <rect x="82" y="90" width="10" height="96" rx="4" class="g-body"/>
-        <rect x="62" y="85" width="36" height="6" rx="1" class="g-book"/>
-        <path d="M86 14 H126 M100 86 H126 M96 188 H126" class="g-lead"/>
-        <g class="g-mark"><circle cx="134" cy="14" r="8"/><text x="134" y="14">1</text></g>
-        <g class="g-mark"><circle cx="134" cy="86" r="8"/><text x="134" y="86">2</text></g>
-        <g class="g-mark"><circle cx="134" cy="186" r="8"/><text x="134" y="186">3</text></g>
-        <text x="147" y="18" class="g-lbl">Top of head</text>
-        <text x="147" y="90" class="g-lbl">Top of book</text>
-        <text x="147" y="174" class="g-lbl">Floor</text>
-        <rect x="226" y="84" width="12" height="20" rx="2" class="g-phone"/>
-        <text x="232" y="118" class="g-lbl" text-anchor="middle">phone</text>
-        <text x="232" y="129" class="g-lbl" text-anchor="middle">hip ht</text>
-      </svg>
-      <ol class="tips">
-        <li>Barefoot, facing the camera, feet about 15 cm apart.</li>
-        <li>Pull a hardback book up firmly between your legs, spine level, like a saddle.</li>
-        <li>Phone at hip height, about 3 m away, held level and square to you. Use 2× zoom if you have it.</li>
-        <li>Whole body in frame, floor visible under your heels. Someone else takes the photo.</li>
-      </ol>
-    </div>
-
-    <div class="pguide" id="pgBike" hidden>
-      <svg viewBox="0 0 250 200" role="img" aria-label="On-bike photo: side view, crank pointing straight down, phone at bottom-bracket height, mark hip, knee, ankle and shoulder">
-        <line x1="6" y1="187" x2="224" y2="187" class="g-floor"/>
-        <circle cx="48" cy="150" r="36" class="g-wheel"/>
-        <circle cx="196" cy="150" r="36" class="g-wheel"/>
-        <path d="M120 158 L102 80 L170 84 L176 104 Z M120 158 L48 150 L102 80 M176 104 L196 150 M170 84 L180 72" class="g-bike"/>
-        <path d="M88 72 H112" class="g-saddle"/>
-        <path d="M120 158 L120 182 M112 182 H130" class="g-bike"/>
-        <path d="M102 64 L134 116 L118 174 M112 180 H132" class="g-limb"/>
-        <path d="M102 64 L152 38 L178 74" class="g-limb"/>
-        <circle cx="166" cy="24" r="10" class="g-body"/>
-        <g class="g-mark"><circle cx="102" cy="64" r="8"/><text x="102" y="64">1</text></g>
-        <g class="g-mark"><circle cx="134" cy="116" r="8"/><text x="134" y="116">2</text></g>
-        <g class="g-mark"><circle cx="118" cy="174" r="8"/><text x="118" y="174">3</text></g>
-        <g class="g-mark"><circle cx="152" cy="38" r="8"/><text x="152" y="38">4</text></g>
-        <rect x="234" y="132" width="12" height="20" rx="2" class="g-phone"/>
-        <text x="240" y="166" class="g-lbl" text-anchor="middle">BB ht</text>
-      </svg>
-      <ol class="tips">
-        <li>Bike level on a trainer, you in your usual shoes and kit.</li>
-        <li>Stop pedalling with the crank on the camera side pointing straight down (6 o'clock).</li>
-        <li>Phone about 3 m to the side at bottom-bracket height, level and square to the bike.</li>
-        <li>Small stickers on your hip bone, knee and outer ankle bone make tapping more accurate.</li>
-      </ol>
-    </div>
-
-    <div class="pbtns">
-      <label class="filebtn" for="camIn">Take photo<input id="camIn" type="file" accept="image/*" capture="environment"></label>
-      <label class="filebtn ghost" for="fileIn">Choose a photo<input id="fileIn" type="file" accept="image/*"></label>
-    </div>
-
+    <details class="howto"><summary>How to take a good photo</summary><ol class="tips" id="pTips"></ol></details>
     <div class="pstage" id="pstage" hidden>
       <p class="pprompt" id="pprompt"></p>
       <canvas id="pcan" aria-label="Your photo. Tap to place measurement points, drag a point to adjust it."></canvas>
@@ -274,152 +403,247 @@ footer{margin-top:28px;font-size:12px;color:var(--muted);max-width:75ch}
       </div>
     </div>
     <div class="presult" id="presult" aria-live="polite"></div>
-    <p class="hint">Your photo stays on this device. It is processed in your browser and never uploaded.</p>
-  </fieldset>
+  </div>
+  </div>
+  <div class="or"><span>or type it in</span></div>
+  <div class="blocks">
+    <div class="block wide">
+      <div class="bh"><span class="ico" aria-hidden="true">📏</span><div><h3>Your size</h3><p>Barefoot measurements work best.</p></div></div>
+      <div class="row three">
+        <label for="height">Height <small>cm</small><input id="height" type="number" inputmode="decimal" step="0.5" value="178"></label>
+        <label for="inseam">Inseam <small>cm, floor to crotch</small><input id="inseam" type="number" inputmode="decimal" step="0.5" value="84"></label>
+        <label for="weight">Weight <small>kg</small><input id="weight" type="number" inputmode="decimal" step="0.5" value="72"></label>
+      </div>
+      
+    </div>
+    <div class="block">
+      <div class="bh"><span class="ico" aria-hidden="true">🧘</span><div><h3>Flexibility</h3><p>Straight legs, reach for your toes.</p></div></div>
+      <fieldset class="choice"><legend class="hint" style="font-weight:400">How far can you reach?</legend>
+        <div class="opts">
+          <label><input type="radio" name="flex" value="limited" id="flex-l"><span>Can't reach toes</span></label>
+          <label><input type="radio" name="flex" value="average" id="flex-a" checked><span>Fingertips touch</span></label>
+          <label><input type="radio" name="flex" value="good" id="flex-g"><span>Palms flat</span></label>
+        </div>
+      </fieldset>
+    </div>
+    <div class="block">
+      <div class="bh"><span class="ico" aria-hidden="true">🦵</span><div><h3>Knees</h3><p>Any pain at the front or back of the knee?</p></div></div>
+      <fieldset class="choice"><legend class="hint" style="font-weight:400">Knee pain history</legend>
+        <div class="opts">
+          <label><input type="radio" name="knee" value="no" id="knee-n" checked><span>None</span></label>
+          <label><input type="radio" name="knee" value="yes" id="knee-y"><span>Yes, front or back</span></label>
+        </div>
+      </fieldset>
+    </div>
+    <div class="block wide">
+      <div class="bh"><span class="ico" aria-hidden="true">⚡</span><div><h3>Power</h3><p>Used for the time-saved estimate.</p></div><span class="tag">Optional</span></div>
+      <label for="ftp">FTP <small>watts</small><input id="ftp" type="number" inputmode="numeric" step="1" value="260" style="max-width:220px"></label>
+    </div>
+  </div>
+</section>
 
-  <fieldset>
-    <legend>Rider physiology</legend>
-    <div class="row three">
-      <label for="height">Height <small>cm</small><input id="height" type="number" step="0.5" value="178"></label>
-      <label for="inseam">Inseam <small>cm, floor to crotch, barefoot</small><input id="inseam" type="number" step="0.5" value="84"></label>
-      <label for="weight">Weight <small>kg</small><input id="weight" type="number" step="0.5" value="72"></label>
+<!-- STEP 3 -->
+<section class="step" id="s-bike" aria-labelledby="h-bike" hidden>
+  <div class="stephead">
+    <div><span class="kicker">Step 2 of 3</span><h2 id="h-bike" tabindex="-1">Your bike</h2><p>A side photo of your bike gives its current saddle height and seat angle.</p></div>
+  </div>
+  <div data-photo-slot="frame"></div>
+  <div class="or"><span>or type it in</span></div>
+  <div class="blocks">
+    <div class="block wide">
+      <div class="bh"><span class="ico" aria-hidden="true">🚲</span><div><h3>What do you ride?</h3></div></div>
+      <fieldset class="choice"><legend class="hint" style="font-weight:400">Bike type</legend>
+        <div class="opts">
+          <label><input type="radio" name="disc" value="road" id="disc-r" checked><span><i class="em" aria-hidden="true">🛣️</i>Road bike<small>Drop bars, all-rounder</small></span></label>
+          <label><input type="radio" name="disc" value="tt" id="disc-t"><span><i class="em" aria-hidden="true">⏱️</i>TT / triathlon<small>Aero bars, low and fast</small></span></label>
+        </div>
+      </fieldset>
+      <div class="row">
+        <label for="brand">Brand
+          <select id="brand">
+            <option>Canyon</option><option>Specialized</option><option>Trek</option><option>Cervélo</option>
+            <option>Giant</option><option>Cannondale</option><option>Pinarello</option><option>BMC</option>
+            <option>Scott</option><option>Factor</option><option>Orbea</option><option>Ridley</option>
+            <option>Lapierre</option><option>Look</option><option>Other</option>
+          </select>
+        </label>
+        <label for="size">Frame size <small>as printed, e.g. M, 56</small><input id="size" type="text" value="M"></label>
+      </div>
     </div>
-    <p class="hint">Inseam: stand against a wall, pull a book up firmly between your legs, measure from the floor to the top of the book.</p>
-    <label>Hamstring flexibility <small>straight-leg toe touch</small>
-      <div class="seg" role="radiogroup">
-        <label><input type="radio" name="flex" value="limited" id="flex-l"><span>Can't reach toes</span></label>
-        <label><input type="radio" name="flex" value="average" id="flex-a" checked><span>Fingertips touch</span></label>
-        <label><input type="radio" name="flex" value="good" id="flex-g"><span>Palms flat</span></label>
-      </div>
-    </label>
-    <label>Knee pain history
-      <div class="seg" role="radiogroup">
-        <label><input type="radio" name="knee" value="no" id="knee-n" checked><span>None</span></label>
-        <label><input type="radio" name="knee" value="yes" id="knee-y"><span>Front or back of knee</span></label>
-      </div>
-    </label>
-    <label for="ftp">FTP <small>W, optional — used for the speed estimate</small><input id="ftp" type="number" step="1" value="260"></label>
-  </fieldset>
+    <div class="block">
+      <div class="bh"><span class="ico" aria-hidden="true">📐</span><div><h3>Geometry</h3><p>From the geometry chart and crank arm.</p></div></div>
+      <label for="sta">Seat tube angle <small>degrees</small><input id="sta" type="number" inputmode="decimal" step="0.1" value="73.5"></label>
+      <label for="curCrank">Crank length <small>mm, stamped on the crank arm</small><input id="curCrank" type="number" inputmode="decimal" step="2.5" value="172.5"></label>
+    </div>
+    <div class="block">
+      <div class="bh"><span class="ico" aria-hidden="true">🔧</span><div><h3>Current setup</h3><p>So we can show what to change.</p></div></div>
+      <label for="curHeight">Saddle height <small>mm, BB centre to saddle top</small><input id="curHeight" type="number" inputmode="numeric" step="1" value="735"></label>
+      <label for="curSetback">Setback <small>mm, saddle tip behind BB · optional</small><input id="curSetback" type="number" inputmode="numeric" step="1" value=""></label>
+    </div>
+  </div>
+</section>
 
-  <fieldset>
-    <legend>Bike</legend>
-    <div class="row">
-      <label for="brand">Brand
-        <select id="brand">
-          <option>Canyon</option><option>Specialized</option><option>Trek</option><option>Cervélo</option>
-          <option>Giant</option><option>Cannondale</option><option>Pinarello</option><option>BMC</option>
-          <option>Scott</option><option>Factor</option><option>Orbea</option><option>Ridley</option>
-          <option>Lapierre</option><option>Look</option><option>Other</option>
-        </select>
-      </label>
-      <label for="size">Frame size <small>as printed, e.g. M, 56, 54cm</small><input id="size" type="text" value="M"></label>
+<!-- STEP 4 -->
+<section class="step" id="s-goal" aria-labelledby="h-goal" hidden>
+  <div class="stephead">
+    <div><span class="kicker">Step 3 of 3</span><h2 id="h-goal" tabindex="-1">What are you chasing?</h2><p>Your goal changes the target knee angle and seat position.</p></div>
+  </div>
+  <div class="blocks">
+    <div class="block wide">
+      <div class="bh"><span class="ico" aria-hidden="true">🎯</span><div><h3>Your goal</h3></div></div>
+      <fieldset class="choice"><legend class="hint" style="font-weight:400">What do you want to optimise?</legend>
+        <div class="opts">
+          <label><input type="radio" name="goal" value="power" id="goal-p"><span><i class="em" aria-hidden="true">💥</i>Peak power<small>Sprints, crits, short efforts</small></span></label>
+          <label><input type="radio" name="goal" value="balanced" id="goal-b" checked><span><i class="em" aria-hidden="true">⚖️</i>Balanced<small>A bit of everything</small></span></label>
+          <label><input type="radio" name="goal" value="endurance" id="goal-e"><span><i class="em" aria-hidden="true">🏔️</i>Economy<small>Long rides, gran fondos</small></span></label>
+        </div>
+      </fieldset>
     </div>
-    <label>Bike type
-      <div class="seg" role="radiogroup">
-        <label><input type="radio" name="disc" value="road" id="disc-r" checked><span>Road bike</span></label>
-        <label><input type="radio" name="disc" value="tt" id="disc-t"><span>TT / triathlon</span></label>
+    <div class="block wide">
+      <div class="bh"><span class="ico" aria-hidden="true">💨</span><div><h3>Speed &amp; aero</h3><p>Used to pick your torso angle and the watts maths.</p></div></div>
+      <div class="row">
+        <label for="speed">Typical race speed <small>km/h, flat</small><input id="speed" type="number" inputmode="decimal" step="0.5" value="36"></label>
+        <label for="cda">Current CdA <small>m², keep the default if unknown</small><input id="cda" type="number" inputmode="decimal" step="0.005" value="0.300"></label>
       </div>
-    </label>
-    <div class="row">
-      <label for="sta">Seat tube angle <small>° from the brand's geometry chart</small><input id="sta" type="number" step="0.1" value="73.5"></label>
-      <label for="curCrank">Current crank length <small>mm, stamped on the crank arm</small><input id="curCrank" type="number" step="2.5" value="172.5"></label>
+      <p class="hint">CdA defaults are rough typical values (road drops ≈ 0.30, TT ≈ 0.25). To be verified with a field test or an aero sensor.</p>
     </div>
-    <div class="row">
-      <label for="curHeight">Current saddle height <small>mm, BB centre to saddle top, along the seat tube</small><input id="curHeight" type="number" step="1" value="735"></label>
-      <label for="curSetback">Current setback <small>mm, saddle tip behind BB, optional</small><input id="curSetback" type="number" step="1" value=""></label>
-    </div>
-  </fieldset>
-
-  <fieldset>
-    <legend>Goal &amp; event</legend>
-    <label>What do you want to optimise?
-      <div class="seg" role="radiogroup">
-        <label><input type="radio" name="goal" value="power" id="goal-p"><span>Peak power (short efforts)</span></label>
-        <label><input type="radio" name="goal" value="balanced" id="goal-b" checked><span>Balanced</span></label>
-        <label><input type="radio" name="goal" value="endurance" id="goal-e"><span>Economy (long events)</span></label>
-      </div>
-    </label>
-    <div class="row">
-      <label for="speed">Typical race speed <small>km/h, flat</small><input id="speed" type="number" step="0.5" value="36"></label>
-      <label for="cda">Current CdA <small>m², leave if unknown</small><input id="cda" type="number" step="0.005" value="0.300"></label>
-    </div>
-    <p class="hint">CdA defaults are rough typical values (road drops ≈ 0.30, TT ≈ 0.25). To be verified with a field test or an aero sensor.</p>
-  </fieldset>
+  </div>
+</section>
 </form>
 
-<div class="results" aria-live="polite">
-  <section class="card diagram">
-    <h2>Target position
-      <span class="tabs" role="tablist">
-        <button type="button" role="tab" id="tab3d" class="tab on" aria-selected="true">3D</button>
-        <button type="button" role="tab" id="tab2d" class="tab" aria-selected="false">Angles</button>
-      </span>
-    </h2>
-    <div id="pane3d">
-      <div class="v3d" id="v3d" aria-label="3D model of the rider on the bike, drag to rotate"></div>
-      <div class="v3dbar">
-        <span id="v3dInfo" class="v3dinfo"></span>
-        <span class="btns">
-          <button type="button" class="ghost sm" data-view="side">Side</button>
-          <button type="button" class="ghost sm" data-view="three">3/4</button>
-          <button type="button" class="ghost sm" data-view="front">Front</button>
-        </span>
+<!-- RESULTS -->
+<section class="step" id="s-fit" aria-labelledby="h-fit" aria-live="polite" hidden>
+  <div class="stephead">
+    <div><span class="kicker">Your fit</span><h2 id="h-fit" tabindex="-1">Here's your starting setup</h2><p>A research-based starting point. Test it on the road before you commit.</p></div>
+  </div>
+  <div class="res">
+    <div class="col">
+      <div class="big">
+        <span class="k">Saddle height</span>
+        <span class="num"><span id="sumH">—</span><small>mm</small></span>
+        <span class="d" id="sumHd"></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#121411" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 8c4-1 11-1.5 18 .5-2 2.5-6 3.5-9 3.5"/><path d="M12 12v8"/><path d="M8.5 20h7"/></svg>
       </div>
-      <p class="hint">Drag to rotate, scroll or pinch to zoom. Proportions are generic body ratios scaled to your height, so treat it as an illustration of the angles, not a scan of you.</p>
+      <div class="minis">
+        <div class="mini"><span>Knee bend</span><b id="sumKnee">—</b></div>
+        <div class="mini"><span>Crank length</span><b id="sumCrank">—</b></div>
+        <div class="mini"><span>Torso angle</span><b id="sumTorso">—</b></div>
+        <div class="mini ink"><span>Aero gain</span><b id="sumW">—</b></div>
+      </div>
+      <div class="block">
+        <div class="bh"><span class="ico" aria-hidden="true">📋</span><div><h3>Setup sheet</h3><p id="bikeLabel"></p></div></div>
+        <div class="sheet" id="sheet"></div>
+        <div class="btns"><button type="button" id="copy">Copy setup sheet</button></div>
+        <textarea id="copyText" aria-hidden="true" tabindex="-1"></textarea>
+      </div>
     </div>
-    <div id="pane2d" hidden>
-      <svg id="svg" viewBox="0 0 420 280" role="img" aria-label="Side view of rider position"></svg>
-      <p class="hint">Schematic, not to scale.</p>
+
+    <div class="col">
+      <div class="block diagram">
+        <div class="bh"><span class="ico" aria-hidden="true">🧊</span><div><h3>Target position</h3></div>
+          <span class="tabs" role="tablist" style="margin-left:auto">
+            <button type="button" role="tab" id="tab3d" class="tab on" aria-selected="true">3D</button>
+            <button type="button" role="tab" id="tab2d" class="tab" aria-selected="false">Angles</button>
+          </span>
+        </div>
+        <div id="pane3d" style="display:grid;gap:10px">
+          <div class="v3d" id="v3d" aria-label="3D model of the rider on the bike, drag to rotate"></div>
+          <div class="v3dbar">
+            <span id="v3dInfo" class="v3dinfo"></span>
+            <span class="btns">
+              <button type="button" class="ghost sm" data-view="side">Side</button>
+              <button type="button" class="ghost sm" data-view="three">3/4</button>
+              <button type="button" class="ghost sm" data-view="front">Front</button>
+            </span>
+          </div>
+          <p class="hint">Drag to rotate, pinch to zoom. Generic body proportions scaled to your height: an illustration of the angles, not a scan of you.</p>
+        </div>
+        <div id="pane2d" hidden>
+          <svg id="svg" viewBox="0 0 420 280" role="img" aria-label="Side view of rider position"></svg>
+          <p class="hint">Schematic, not to scale.</p>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="bh"><span class="ico" aria-hidden="true">💨</span><div><h3>Watts from aero</h3><p>Slide to test a smaller frontal area.</p></div><span class="badge b-phys">Physics model</span></div>
+        <div class="stats" id="stats"></div>
+        <div class="slider">
+          <label for="dcda">CdA reduction to test: <span id="dcdaVal" style="font-family:var(--mono)"></span></label>
+          <input id="dcda" type="range" min="0.002" max="0.04" step="0.001" value="0.010">
+        </div>
+        <p class="hint" id="aeroNote"></p>
+      </div>
+
+      <div class="block">
+        <div class="bh"><span class="ico" aria-hidden="true">✅</span><div><h3>Test it on you</h3><p>Five steps before you keep a change.</p></div></div>
+        <p class="warnbox">Faulkner et al. (2024) found the same 1–3 cm change made some riders faster and others slower. Every number here is a starting point.</p>
+        <ol class="steps">
+          <li>Change one thing at a time: saddle height, then setback, then front end.</li>
+          <li>Film yourself side-on at race effort, or use the knee check below.</li>
+          <li>Ride 2–3 weeks before judging comfort. Trained riders adapt to aero positions.</li>
+          <li>Same course, same power, compare speed. An aero sensor or velodrome laps give CdA directly.</li>
+          <li>Keep the change only if you're faster without new pain.</li>
+        </ol>
+        <details class="knee"><summary>🚴 Check your knee bend from a photo of you on the bike</summary><div data-photo-slot="bike"></div></details>
+      </div>
+
+      <details class="block">
+        <summary><span class="ico" aria-hidden="true">📚</span><h3 style="font-family:var(--display);font-size:19px;margin:0">Sources</h3></summary>
+        <ul class="refs">
+          <li><a href="https://doi.org/10.1080/02640414.2024.2394752" target="_blank" rel="noopener">Husband et al. 2024, systematic review</a> — knee 25–35°, saddle fore-aft and hip angle</li>
+          <li><a href="https://doi.org/10.1016/j.jbiomech.2014.02.029" target="_blank" rel="noopener">Fintelman et al. 2014</a> — optimal torso angle vs speed</li>
+          <li><a href="https://doi.org/10.1080/02640414.2015.1009936" target="_blank" rel="noopener">Fintelman et al. 2015</a> — physiological cost of low torso</li>
+          <li><a href="https://link.springer.com/article/10.1007/s12283-023-00446-0" target="_blank" rel="noopener">Faulkner et al. 2024</a> — individual CdA responses, CdA 0.2467 m² group mean</li>
+          <li><a href="https://pubmed.ncbi.nlm.nih.gov/20811079/" target="_blank" rel="noopener">Bini et al. 2010</a> — saddle height and joint work</li>
+          <li><a href="https://doi.org/10.1007/s004210100400" target="_blank" rel="noopener">Martin &amp; Spirduso 2001</a> — crank length and maximal power</li>
+        </ul>
+      </details>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section class="card">
-    <h2>Setup sheet <small id="bikeLabel"></small></h2>
-    <div class="sheet" id="sheet"></div>
-    <div class="btns" style="margin-top:12px">
-      <button type="button" id="copy">Copy setup sheet</button>
-    </div>
-    <textarea id="copyText" aria-hidden="true" tabindex="-1"></textarea>
-  </section>
-
-  <section class="card">
-    <h2>Watts from aerodynamics <span class="badge b-phys">Physics model</span></h2>
-    <div class="stats" id="stats"></div>
-    <div class="slider">
-      <label for="dcda">CdA reduction to test: <span id="dcdaVal" style="font-family:var(--mono)"></span></label>
-      <input id="dcda" type="range" min="0.002" max="0.04" step="0.001" value="0.010">
-    </div>
-    <p class="hint" id="aeroNote"></p>
-  </section>
-
-  <section class="card">
-    <h2>Validate it on you</h2>
-    <p class="warnbox">Faulkner et al. (2024) found that the same 1–3 cm change made some riders faster and others slower. Treat every number here as a starting point and test it.</p>
-    <ol class="steps" style="margin-top:10px">
-      <li>Change one thing at a time. Saddle height first, then setback, then front end.</li>
-      <li>Film yourself side-on at race effort. Check the knee bend at the bottom of the stroke falls in your target range.</li>
-      <li>Ride 2–3 weeks before judging comfort. Studies show trained riders adapt to aero positions.</li>
-      <li>Measure: same course, same power, compare speed. An aero sensor or velodrome laps give CdA directly.</li>
-      <li>Keep the change only if speed improves without new pain.</li>
-    </ol>
-  </section>
-
-  <section class="card">
-    <h2>Sources</h2>
-    <ul class="refs">
-      <li><a href="https://doi.org/10.1080/02640414.2024.2394752" target="_blank" rel="noopener">Husband et al. 2024, systematic review</a> — knee 25–35°, saddle fore-aft and hip angle</li>
-      <li><a href="https://doi.org/10.1016/j.jbiomech.2014.02.029" target="_blank" rel="noopener">Fintelman et al. 2014</a> — optimal torso angle vs speed</li>
-      <li><a href="https://doi.org/10.1080/02640414.2015.1009936" target="_blank" rel="noopener">Fintelman et al. 2015</a> — physiological cost of low torso</li>
-      <li><a href="https://link.springer.com/article/10.1007/s12283-023-00446-0" target="_blank" rel="noopener">Faulkner et al. 2024</a> — individual CdA responses, CdA 0.2467 m² group mean</li>
-      <li><a href="https://pubmed.ncbi.nlm.nih.gov/20811079/" target="_blank" rel="noopener">Bini et al. 2010</a> — saddle height and joint work</li>
-      <li><a href="https://doi.org/10.1007/s004210100400" target="_blank" rel="noopener">Martin &amp; Spirduso 2001</a> — crank length and maximal power</li>
-    </ul>
-  </section>
+<footer>This configurator gives research-informed starting points, not a professional bike fit. The saddle-height formula (LeMond, 0.883 × inseam) and the mm-per-degree conversion are approximations: verify the actual knee angle on video. Brand and size only label your sheet; this page does not hold manufacturers' geometry, so read the seat tube angle from your brand's official chart. If you have pain, see a qualified bike fitter or physiotherapist.</footer>
 </div>
-</div>
 
-<footer>This configurator gives research-informed starting points, not a professional bike fit. The saddle-height formula (LeMond, 0.883 × inseam) and the mm-per-degree conversion are approximations: verify the actual knee angle on video. The brand and size are used to label your sheet; this page does not hold manufacturers' geometry, so read the seat tube angle from your brand's official chart. If you have pain, see a qualified bike fitter or physiotherapist. The colour themes are inspired by the leader's jerseys of cycling's three Grand Tours; this tool is not affiliated with or endorsed by their organisers.</footer>
-</div>
+<dialog class="gate" id="gate" aria-labelledby="gTitle">
+  <div class="gate-card">
+    <div class="gate-head">
+      <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#121411" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8c4-1 11-1.5 18 .5-2 2.5-6 3.5-9 3.5"/><path d="M12 12v8"/><path d="M8.5 20h7"/></svg></span>
+      <span class="kicker">Before you start · 2 questions</span>
+      <h2 id="gTitle">Quick hello 👋</h2>
+      <p>Tell us who you are, then you're in. Takes 5 seconds.</p>
+    </div>
+    <fieldset class="choice q">
+      <legend>Are you a…</legend>
+      <div class="opts">
+        <label><input type="radio" name="role" value="cyclist"><span><i class="em" aria-hidden="true">🚴</i>Cyclist</span></label>
+        <label><input type="radio" name="role" value="physician"><span><i class="em" aria-hidden="true">🩺</i>Physician</span></label>
+        <label><input type="radio" name="role" value="physio"><span><i class="em" aria-hidden="true">💪</i>Physio</span></label>
+        <label><input type="radio" name="role" value="other"><span><i class="em" aria-hidden="true">✨</i>Other</span></label>
+      </div>
+      <label id="gOtherWrap" for="gOther" hidden style="margin-top:6px">What do you do? <small>optional</small><input id="gOther" type="text" maxlength="80" placeholder="e.g. bike fitter, coach, shop owner" style="font-family:var(--body)"></label>
+    </fieldset>
+    <fieldset class="choice q">
+      <legend>How long have you been in the cycling industry?</legend>
+      <div class="opts yrs">
+        <label><input type="radio" name="years" value="lt1"><span>Under 1 year</span></label>
+        <label><input type="radio" name="years" value="1-3"><span>1–3 years</span></label>
+        <label><input type="radio" name="years" value="3-10"><span>3–10 years</span></label>
+        <label><input type="radio" name="years" value="10+"><span>10+ years</span></label>
+        <label><input type="radio" name="years" value="none"><span>Not in the industry</span></label>
+      </div>
+    </fieldset>
+    <button type="button" class="go" id="gGo" disabled>Let's go <span aria-hidden="true">→</span></button>
+    <p class="privacy">🔒 Saved on this device only.</p>
+  </div>
+</dialog>
+
+<nav class="dock" aria-label="Step navigation">
+  <button type="button" class="back" id="back"><span aria-hidden="true">←</span><span>Back</span></button>
+  <div class="mid"><small id="dockStep">Step 1 of 4</small><span id="dockVal" aria-live="polite"></span></div>
+  <button type="button" id="next"><span>Next</span><i aria-hidden="true" style="font-style:normal">→</i></button>
+  <button type="button" id="edit" hidden>Edit inputs</button>
+</nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -529,6 +753,15 @@ function compute(){
     '<div class="stat hl"><b>−'+fmt(saved,0)+' W</b><span>same speed, CdA −'+dcda.toFixed(3)+'</span></div>'+
     '<div class="stat"><b>−'+Math.floor(dt/60)+':'+String(Math.round(dt%60)).padStart(2,"0")+'</b><span>40 km at '+fmt(Pref,0)+' W'+(ftp?' (FTP)':'')+'</span></div>';
   $("aeroNote").textContent="Each 0.01 m² of CdA is worth ≈"+fmt(per01,0)+" W at "+speed+" km/h. Assumes air density 1.2 kg/m³, Crr 0.004, 3% drivetrain loss, bike "+(m-W)+" kg, flat road, no wind. Faulkner 2024 measured changes as small as 0.002 m² and treated 1% (~34 s over 40 km) as meaningful. This does not include any power you lose in a lower position — measure that yourself.";
+
+  // summary tiles + dock
+  $("sumH").textContent=fmt(height,0);
+  $("sumHd").textContent=dH!=null?(Math.abs(dH)<=3?"Right where you are":sign(dH,0)+" mm vs your bike now"):"Range "+fmt(lo,0)+"–"+fmt(hi,0)+" mm";
+  $("sumKnee").textContent=(kneeT-2)+"–"+(kneeT+2)+"°";
+  $("sumCrank").textContent=crank+" mm";
+  $("sumTorso").textContent=torso[0]+"–"+torso[1]+"°";
+  $("sumW").textContent="−"+fmt(saved,0)+" W";
+  $("dockVal").innerHTML="<b>"+fmt(height,0)+" mm</b> saddle";
 
   drawSVG(H,height,crank,esaT,kneeT,torsoMid,disc);
   draw3D(H,height,crank,esaT,kneeT,torsoMid,disc);
@@ -749,9 +982,18 @@ function draw3D(H,height,crank,esa,kneeFlex,torsoDeg,disc){
 let lastFit=null,pmode="stand",pview=null,pdrag=null;
 const PM={
   stand:{need:3,max:3,labels:["Tap the top of the head","Tap the top of the book","Tap the floor at the heel"]},
-  bike:{need:3,max:4,labels:["Tap the hip bone (side of the hip)","Tap the centre of the side of the knee","Tap the outer ankle bone","Optional: tap the shoulder to check torso angle"]}
+  bike:{need:3,max:4,labels:["Tap the hip bone (side of the hip)","Tap the centre of the side of the knee","Tap the outer ankle bone","Optional: tap the shoulder to check torso angle"]},
+  frame:{need:4,max:4,labels:["Tap where the rear tyre touches the ground","Tap the very top of the rear tyre","Tap the centre of the crank axle (bottom bracket)","Tap the top of the saddle, halfway along"]}
 };
-const PS={stand:{img:null,url:null,pts:[]},bike:{img:null,url:null,pts:[]}};
+const PS={stand:{img:null,url:null,pts:[]},bike:{img:null,url:null,pts:[]},frame:{img:null,url:null,pts:[]}};
+const PCOPY={
+  stand:{kick:"Fastest way · 1 photo",title:"Get your inseam from a photo",sub:"Stand facing the camera with a book pulled up between your legs. Tap 3 points and we measure the rest.",
+    tips:["Barefoot, facing the camera, feet about 15 cm apart.","Pull a hardback book up firmly between your legs, spine level, like a saddle.","Phone at hip height, about 3 m away, held level and square to you. Use 2× zoom if you have it.","Whole body in frame, floor visible under your heels. Someone else takes the photo."]},
+  frame:{kick:"Fastest way · 1 photo",title:"Snap your bike from the side",sub:"Bike standing upright, shot straight from the side. Tap 4 points to get its current saddle height and seat angle.",
+    tips:["Lean the bike against nothing: hold it upright or use a stand, both wheels on the floor.","Shoot from the drive side, about 3 m away, phone at bottom-bracket height, level and square to the bike.","The whole bike in frame, with the floor under the rear tyre visible.","Set the wheel + tyre diameter below if you don't ride standard 700c road tyres."]},
+  bike:{kick:"Knee check · 1 photo",title:"Check your knee bend on the bike",sub:"A side photo of you on the bike, crank pointing straight down. Tap hip, knee and ankle.",
+    tips:["Bike level on a trainer, you in your usual shoes and kit.","Stop pedalling with the crank on the camera side pointing straight down (6 o'clock).","Phone about 3 m to the side at bottom-bracket height, level and square to the bike.","Small stickers on your hip bone, knee and outer ankle bone make tapping more accurate."]}
+};
 const pcol=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
 function loadPhoto(file){
@@ -782,6 +1024,8 @@ function pdraw(loupeAt){
   if(pmode==="stand"){
     if(P[0]&&P[2])seg(P[0],P[2]);
     if(P[1]&&P[0]&&P[2]){const dx=P[2].x-P[0].x,dy=P[2].y-P[0].y,l=Math.hypot(dx,dy)||1,nx=-dy/l*22,ny=dx/l*22;seg({x:P[1].x-nx,y:P[1].y-ny},{x:P[1].x+nx,y:P[1].y+ny})}
+  }else if(pmode==="frame"){
+    if(P[0]&&P[1])seg(P[0],P[1]);if(P[2]&&P[3])seg(P[2],P[3]);
   }else{
     if(P[0]&&P[1])seg(P[0],P[1]);if(P[1]&&P[2])seg(P[1],P[2]);if(P[0]&&P[3])seg(P[0],P[3]);
   }
@@ -811,7 +1055,7 @@ function kneeFlex(p){const h=p[0],k=p[1],a=p[2];const v1={x:h.x-k.x,y:h.y-k.y},v
 let insFromPhoto=null;
 function standResult(p){
   const H=num("height");
-  if(!H)return '<div class="pres"><p>Enter your height in the Rider physiology section first. It sets the scale of the photo.</p></div>';
+  if(!H)return '<div class="pres"><p>Enter your height under “or type it in” below first. It sets the scale of the photo.</p></div>';
   const hd=p[0],cr=p[1],fl=p[2],ax={x:fl.x-hd.x,y:fl.y-hd.y},L=Math.hypot(ax.x,ax.y)||1;
   const proj=((fl.x-cr.x)*ax.x+(fl.y-cr.y)*ax.y)/L,ins=proj/L*H,ratio=ins/H;
   const tilt=Math.abs(Math.atan2(ax.x,ax.y)*180/Math.PI);
@@ -824,6 +1068,26 @@ function standResult(p){
   const cur=num("inseam");
   s+=(cur!=null&&Math.abs(cur-insFromPhoto)<0.05)?'<span class="chip ok">In use as your inseam</span>':'<div class="btns"><button type="button" id="useIns">Use '+insFromPhoto.toFixed(1)+' cm as my inseam</button></div>';
   return s+'</div>';
+}
+let frameFromPhoto=null;
+function frameResult(p){
+  const D=parseFloat($("wheelD").value)||670;
+  const ux0=p[1].x-p[0].x,uy0=p[1].y-p[0].y,wl=Math.hypot(ux0,uy0)||1,ux=ux0/wl,uy=uy0/wl;
+  const vx=p[3].x-p[2].x,vy=p[3].y-p[2].y;
+  const up=vx*ux+vy*uy,side=Math.abs(vx*(-uy)+vy*ux);
+  const hmm=Math.hypot(vx,vy)/wl*D,ang=Math.atan2(up,side)*180/Math.PI;
+  const tilt=Math.abs(Math.atan2(ux0,-uy0)*180/Math.PI);
+  frameFromPhoto={h:Math.round(hmm),a:Math.round(ang*10)/10};
+  let s='<div class="pres"><span class="k">Current saddle height</span><b>'+frameFromPhoto.h+' mm</b><p>BB centre to saddle top, scaled from a '+D+' mm wheel.</p>';
+  s+='<span class="k" style="margin-top:6px">Seat angle (BB to saddle)</span><b>'+frameFromPhoto.a.toFixed(1)+'°</b><p>Angle of the BB-to-saddle line above horizontal: your effective seat angle. It can differ from the frame\'s seat tube angle if the seatpost has setback.</p>';
+  if(hmm<500||hmm>950)s+='<span class="chip adj">Check your points</span><p>That height is unusual for an adult road or TT bike. Check points 1–2 are on the rear tyre and 3–4 on the crank axle and saddle.</p>';
+  if(ang<65||ang>84)s+='<span class="chip adj">Unusual angle</span><p>Seat angles are usually 72–81°. Make sure the photo is square to the bike.</p>';
+  if(tilt>4)s+='<span class="chip adj">Photo tilted '+tilt.toFixed(0)+'°</span><p>The tilt is corrected using the wheel, but a level photo is more reliable.</p>';
+  s+='<p>Lens distortion and a camera not square to the bike can shift this by several mm. Check with a tape measure (to be verified).</p>';
+  const ch=num("curHeight"),cs=num("sta");let b='';
+  b+=(ch!=null&&Math.abs(ch-frameFromPhoto.h)<0.5)?'<span class="chip ok">Saddle height in use</span>':'<button type="button" id="useH">Use '+frameFromPhoto.h+' mm as current saddle height</button>';
+  b+=(cs!=null&&Math.abs(cs-frameFromPhoto.a)<0.05)?'<span class="chip ok">Seat angle in use</span>':'<button type="button" class="ghost" id="useSta">Use '+frameFromPhoto.a.toFixed(1)+'° as seat angle</button>';
+  return s+'<div class="btns">'+b+'</div></div>';
 }
 function bikeResult(p){
   const F=lastFit;if(!F)return "";
@@ -841,16 +1105,22 @@ function bikeResult(p){
 
 function prender(){
   const st=PS[pmode],cfg=PM[pmode];
-  $("pmStand").classList.toggle("on",pmode==="stand");$("pmStand").setAttribute("aria-selected",pmode==="stand");
-  $("pmBike").classList.toggle("on",pmode==="bike");$("pmBike").setAttribute("aria-selected",pmode==="bike");
-  $("pgStand").hidden=pmode!=="stand";$("pgBike").hidden=pmode!=="bike";
+  ["stand","frame","bike"].forEach(m=>{$("pg-"+m).toggleAttribute("hidden",m!==pmode)});
+  const cp=PCOPY[pmode];$("pKick").textContent=cp.kick;$("pTitle").textContent=cp.title;$("pSub").textContent=cp.sub;
+  $("pTips").innerHTML=cp.tips.map(t=>"<li>"+t+"</li>").join("");
+  $("wheelRow").hidden=pmode!=="frame";
+  $("camLbl").textContent=st.img?"Retake photo":"Take a photo";$("fileLbl").textContent=st.img?"Use another photo":"Upload a photo";
+  $("photoBox").classList.toggle("has",!!st.img);
   $("pstage").hidden=!st.img;
   if(st.img){const n=st.pts.length;
     $("pprompt").innerHTML=n<cfg.max?'<span class="num">'+(n+1)+'</span>'+cfg.labels[n]+(n>=cfg.need?' <small>or stop here</small>':''):'All points placed. Drag any point to fine-tune it.'}
   pdraw();
-  $("presult").innerHTML=st.img&&st.pts.length>=cfg.need?(pmode==="stand"?standResult(st.pts):bikeResult(st.pts)):"";
+  $("presult").innerHTML=st.img&&st.pts.length>=cfg.need?(pmode==="stand"?standResult(st.pts):pmode==="frame"?frameResult(st.pts):bikeResult(st.pts)):"";
   const u=$("useIns");
   if(u)u.addEventListener("click",()=>{$("inseam").value=insFromPhoto.toFixed(1);$("inseam").dispatchEvent(new Event("input",{bubbles:true}))});
+  const setF=(id,v)=>{$(id).value=v;$(id).dispatchEvent(new Event("input",{bubbles:true}))};
+  const uh=$("useH");if(uh)uh.addEventListener("click",()=>setF("curHeight",frameFromPhoto.h));
+  const ua=$("useSta");if(ua)ua.addEventListener("click",()=>setF("sta",frameFromPhoto.a.toFixed(1)));
 }
 
 const pc=$("pcan");
@@ -871,28 +1141,39 @@ const pend=()=>{if(!pdrag)return;pdrag=null;prender()};
 pc.addEventListener("pointerup",pend);pc.addEventListener("pointercancel",pend);
 $("pUndo").addEventListener("click",()=>{PS[pmode].pts.pop();prender()});
 $("pReset").addEventListener("click",()=>{PS[pmode].pts=[];prender()});
-$("pmStand").addEventListener("click",()=>{pmode="stand";prender()});
-$("pmBike").addEventListener("click",()=>{pmode="bike";prender()});
+$("wheelD").addEventListener("input",e=>{e.stopPropagation();prender()});
 if(window.ResizeObserver)new ResizeObserver(()=>{if(!pdrag)pdraw()}).observe($("photoBox"));
 else window.addEventListener("resize",()=>pdraw());
 
-// jersey theme
-const TKEY="saddle-tour",TOURS=["jaune","rosa","rojo"];
-function setTour(t,persist){
-  if(TOURS.indexOf(t)<0)t="jaune";
-  const root=document.documentElement;
-  if(t==="jaune")root.removeAttribute("data-tour");else root.setAttribute("data-tour",t);
-  document.querySelectorAll(".tour").forEach(b=>{const on=b.dataset.tour===t;b.setAttribute("aria-checked",on);b.tabIndex=on?0:-1});
-  if(persist){try{localStorage.setItem(TKEY,t)}catch(e){}}
+// ---------- step flow ----------
+const STEPS=[...document.querySelectorAll(".step")], SKEY="saddle-step-v2";
+const dots=[...document.querySelectorAll(".stepper button")];
+let cur=0;
+function go(i,focus){
+  cur=Math.max(0,Math.min(STEPS.length-1,i));
+  STEPS.forEach((s,j)=>{s.hidden=j!==cur});
+  dots.forEach((d,j)=>{d.classList.toggle("done",j<cur);if(j===cur)d.setAttribute("aria-current","step");else d.removeAttribute("aria-current")});
+  document.querySelector(".stepper").style.setProperty("--prog",(cur/(STEPS.length-1)));
+  const last=cur===STEPS.length-1;
+  $("back").disabled=cur===0;
+  $("next").hidden=last;
+  $("edit").hidden=!last;
+  $("next").querySelector("span").textContent=cur===STEPS.length-2?"See my fit":"Next";
+  $("dockStep").textContent=last?"Your fit":"Step "+(cur+1)+" of "+(STEPS.length-1);
+  if(T)T.dirty=true;
+  const slot=STEPS[cur].querySelector("[data-photo-slot]");
+  if(slot){if($("photoBox").parentNode!==slot)slot.appendChild($("photoBox"));pmode=slot.dataset.photoSlot;prender()}
+  try{localStorage.setItem(SKEY,String(cur))}catch(e){}
+  if(focus){const h=STEPS[cur].querySelector("h2");const top=document.querySelector(".stepper").getBoundingClientRect().top+window.scrollY-12;
+    window.scrollTo({top:Math.min(window.scrollY,top),behavior:reduceMotion?"auto":"smooth"});if(h)h.focus({preventScroll:true})}
 }
-let savedTour="jaune";try{savedTour=localStorage.getItem(TKEY)||"jaune"}catch(e){}
-setTour(savedTour,false);
-document.querySelectorAll(".tour").forEach((b,i,all)=>{
-  b.addEventListener("click",()=>{setTour(b.dataset.tour,true);compute()});
-  b.addEventListener("keydown",e=>{
-    if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;e.preventDefault();
-    const n=all[(i+(e.key==="ArrowRight"?1:all.length-1))%all.length];n.focus();n.click()});
-});
+dots.forEach((d,j)=>d.addEventListener("click",()=>go(j,true)));
+$("back").addEventListener("click",()=>go(cur-1,true));
+$("next").addEventListener("click",()=>go(cur+1,true));
+$("edit").addEventListener("click",()=>go(0,true));
+document.querySelectorAll("[data-skip]").forEach(b=>b.addEventListener("click",()=>go(cur+1,true)));
+let savedStep=0;try{savedStep=parseInt(localStorage.getItem(SKEY)||"0",10)||0}catch(e){}
+go(savedStep,false);
 
 // tabs
 function showTab(is3d){$("pane3d").hidden=!is3d;$("pane2d").hidden=is3d;$("tab3d").classList.toggle("on",is3d);$("tab2d").classList.toggle("on",!is3d);
@@ -915,5 +1196,23 @@ compute();
 })();
 </script>
 
+<script>
+(function(){
+  const K="saddle-profile-v1",d=document.getElementById("gate");
+  let has=null;try{has=localStorage.getItem(K)}catch(e){}
+  if(has||!d||typeof d.showModal!=="function")return;
+  const go=document.getElementById("gGo"),otherWrap=document.getElementById("gOtherWrap");
+  const val=n=>{const r=d.querySelector('input[name="'+n+'"]:checked');return r?r.value:null};
+  const upd=()=>{otherWrap.hidden=val("role")!=="other";go.disabled=!(val("role")&&val("years"))};
+  d.addEventListener("change",upd);
+  d.addEventListener("cancel",e=>e.preventDefault()); // answer first: Esc does not skip
+  go.addEventListener("click",()=>{
+    const p={role:val("role"),roleOther:val("role")==="other"?document.getElementById("gOther").value.trim():"",years:val("years"),at:new Date().toISOString()};
+    try{localStorage.setItem(K,JSON.stringify(p))}catch(e){}
+    d.close();
+  });
+  d.showModal();upd();
+})();
+</script>
 </body>
 </html>
