@@ -40,3 +40,14 @@ A floating bar at the bottom holds Back / Next and shows the live saddle height.
 ## Limitations
 
 The results are research-informed starting points, not a professional bike fit. The saddle-height formula (0.883 × inseam), the mm-per-degree conversion and the torso-angle bands between 30 and 46 km/h are approximations. Verify your knee angle on video and test speed at equal power. Photo measurements can be off by a centimetre or more; the bike-photo measurement depends on the wheel diameter you enter and on the photo being square to the bike.
+
+## Collecting the welcome answers
+
+The pop-up answers (role and years in the cycling industry) can be sent to a Google Sheet. The answers are anonymous: no name or email is collected.
+
+1. Open the Google Sheet "Saddle Watts – Welcome answers", then go to Extensions → Apps Script.
+2. Paste in `google-sheet/Code.gs` and click Save.
+3. Choose Deploy → New deployment → Web app. Set "Execute as" to **Me** and "Who has access" to **Anyone**, then click Deploy.
+4. Copy the web-app URL (it ends in `/exec`) into `SHEET_ENDPOINT` near the bottom of `index.html`.
+
+While `SHEET_ENDPOINT` is empty, answers stay only in each visitor's browser.

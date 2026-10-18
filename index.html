@@ -634,7 +634,7 @@ footer{margin-top:28px;font-size:12.5px;color:var(--muted);max-width:75ch}
       </div>
     </fieldset>
     <button type="button" class="go" id="gGo" disabled>Let's go <span aria-hidden="true">→</span></button>
-    <p class="privacy">🔒 Saved on this device only.</p>
+    <p class="privacy" id="gPriv">🔒 Saved on this device only.</p>
   </div>
 </dialog>
 
@@ -1198,7 +1198,10 @@ compute();
 
 <script>
 (function(){
+  // Paste the Google Apps Script web-app URL here to collect answers in the Google Sheet.
+  const SHEET_ENDPOINT="";
   const K="saddle-profile-v1",d=document.getElementById("gate");
+  if(SHEET_ENDPOINT&&document.getElementById("gPriv"))document.getElementById("gPriv").textContent="🔒 Anonymous: no name or email. Answers help us improve the tool.";
   let has=null;try{has=localStorage.getItem(K)}catch(e){}
   if(has||!d||typeof d.showModal!=="function")return;
   const go=document.getElementById("gGo"),otherWrap=document.getElementById("gOtherWrap");
@@ -1209,6 +1212,8 @@ compute();
   go.addEventListener("click",()=>{
     const p={role:val("role"),roleOther:val("role")==="other"?document.getElementById("gOther").value.trim():"",years:val("years"),at:new Date().toISOString()};
     try{localStorage.setItem(K,JSON.stringify(p))}catch(e){}
+    if(SHEET_ENDPOINT){try{fetch(SHEET_ENDPOINT,{method:"POST",mode:"no-cors",keepalive:true,headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({role:p.role,roleOther:p.roleOther,years:p.years,at:p.at,page:location.origin+location.pathname})}).catch(()=>{})}catch(e){}}
     d.close();
   });
   d.showModal();upd();
